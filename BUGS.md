@@ -56,3 +56,24 @@ Each entry follows the same shape:
 - **Prevention:** The port and host are derived from single constants at the top of
   `playwright.config.ts`, so the test target and the server can never disagree. The end-to-end
   job runs on every pull request, so a regression here fails fast and visibly.
+
+## BUG-003 — Simulation tests passed normally but timed out in the CI configuration
+
+- **Severity:** medium (CI would have failed on every pull request from phase 3 onwards)
+- **Found in:** Phase 3, after adding the AI simulation tests
+- **Symptom:** `npm test` passed all 74 tests. `npm run test:coverage` — the command CI
+  actually runs — failed two of them with `Test timed out in 5000ms`.
+- **Reproduction:**
+  1. Add a test that simulates hundreds of complete games, or generates thousands of random
+     fleets.
+  2. Run `npm test` — it passes in about 14 seconds.
+  3. Run `npm run test:coverage` — the two heavy tests exceed the 5-second default timeout.
+- **Root cause:** Two independent factors compounded. Vitest applies a 5-second timeout per
+  test by default, and coverage instrumentation makes the code several times slower to
+  execute, so tests that comfortably fit in the budget without coverage no longer did with it.
+- **Fix:** The two heavy tests were given an explicit 60-second timeout, and their iteration
+  counts were reduced (2,000 fleets to 1,000; 1,000 games to 500) — still far more evidence
+  than any hand-written example set, at a fraction of the runtime.
+- **Prevention:** Run the _exact command CI runs_ locally, not a convenient approximation.
+  `npm test` and `npm run test:coverage` are not interchangeable, and only the second one is
+  the gate that matters.
