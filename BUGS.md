@@ -136,3 +136,20 @@ Each entry follows the same shape:
   order-dependent. The reason it was caught at once is that the persistence tests use a fake
   storage they own, so the failures showed up as _other_ tests breaking, which is exactly the
   signal that shared state is involved.
+
+## BUG-007 — The end-to-end reload test was checking its own fixture
+
+- **Severity:** medium (a passing test that proved nothing)
+- **Found in:** Phase 7, writing the full-game end-to-end tests
+- **Symptom:** `an unfinished game survives a reload` failed with the square it had just fired
+  at looking un-fired-at.
+- **Reproduction:** seed a game with Playwright's `page.addInitScript`, fire a shot, and
+  `page.reload()`.
+- **Root cause:** `addInitScript` runs before _every_ navigation, so the reload re-injected the
+  original seeded game and wiped the shot. The failure was in the test, not the game.
+- **Fix:** the seed is written once with `page.evaluate` and then loaded by a single reload, so
+  the later reload reads back whatever the game itself saved.
+- **Prevention:** worth noticing which way this failure pointed. Had the assertion been the
+  other way round — checking that the seed was still there — the test would have passed forever
+  while proving nothing about persistence. A fixture that reapplies itself silently replaces the
+  behaviour under test, so test setup that runs "on every page load" deserves a second look.

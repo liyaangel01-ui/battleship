@@ -2,9 +2,12 @@
 
 A single-player game of Battleship played in the browser against an AI opponent.
 
-> **Status: Phase 6 of 7.** The game is fully playable: place your fleet, take alternating
-> shots against a hunt/target AI, and win or lose. Remaining work is the full-game end-to-end
-> test and the final documentation and deployment pass.
+Place your fleet, then trade shots with a hunt/target AI until one fleet is gone.
+
+- **Play it:** deployed from `main` on Vercel (every pull request also gets its own preview
+  deployment, so a change can be played before it is merged).
+- **Bug log:** [BUGS.md](./BUGS.md) — what broke during development, how it was reproduced, and
+  what stops it coming back.
 
 ## Getting started
 
@@ -125,6 +128,28 @@ clear game-over screen, keyboard and screen-reader support, and a game that surv
 drag-and-drop placement, sound, and the salvo variant. Reducing scope on purpose is preferred
 to adding complexity that none of the project's goals ask for.
 
+## Testing strategy
+
+The suite is shaped by which mistakes would actually matter. Roughly 150 tests, of which very
+few touch the DOM.
+
+| Layer                         | What it covers                                                                                                                                        |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Rules** (`src/domain`)      | Every placement rule and shot outcome, including the edges: last row, last column, ships that touch, repeat shots, the final hit on the final ship    |
+| **Simulation** (`src/ai`)     | 500 complete games and 1,000 random fleets are played out, asserting invariants — every game ends, no square is ever fired at twice, no ship overlaps |
+| **Transitions** (`src/state`) | The reducer rejects illegal moves: firing out of turn, firing after the game is over, starting before the fleet is complete                           |
+| **Components**                | What the player can see and do: placement previews, hidden enemy ships, keyboard navigation, the fleet that survives a reload                         |
+| **End to end** (`e2e/`)       | A real browser plays a real game against the production build, including winning it                                                                   |
+
+Two deliberate choices are worth calling out:
+
+- **Randomness is a parameter.** `seededRng(7)` replays an identical game, so AI behaviour and
+  random placement are asserted rather than hoped for.
+- **The AI is tested by simulation, not by example.** Its value is statistical, so the tests
+  measure the distribution over hundreds of games instead of pinning one hand-written scenario.
+
 ## Bug log
 
-Defects found during development are recorded in [BUGS.md](./BUGS.md) as they are found.
+Defects found during development are recorded in [BUGS.md](./BUGS.md) as they are found, with
+reproduction steps, the root cause, the fix, and the test or habit that keeps each one from
+coming back.
