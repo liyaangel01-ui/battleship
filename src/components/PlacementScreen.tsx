@@ -55,8 +55,8 @@ export function PlacementScreen({ state, dispatch }: PlacementScreenProps) {
   }
 
   return (
-    <div className="flex flex-col items-start gap-8 lg:flex-row lg:gap-12">
-      <div className="w-full max-w-[26rem]">
+    <div className="mx-auto flex max-w-5xl flex-col items-start gap-8 lg:flex-row lg:gap-12">
+      <div className="w-full max-w-[24rem]">
         <h2 className="mb-1 text-lg font-semibold">Position your fleet</h2>
         <p className="mb-4 text-sm text-ocean-300">
           {selectedShipId

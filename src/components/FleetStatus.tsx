@@ -1,4 +1,4 @@
-import { shipStatuses } from '../domain/shots.ts'
+import { shipStatuses, shipsRemaining } from '../domain/shots.ts'
 import type { Board } from '../domain/types.ts'
 
 interface FleetStatusProps {
@@ -15,26 +15,27 @@ interface FleetStatusProps {
 /** How much of a fleet is left, and which of its ships have been sunk. */
 export function FleetStatus({ title, board, revealDamage }: FleetStatusProps) {
   const statuses = shipStatuses(board)
-  const remaining = statuses.filter((status) => !status.isSunk).length
+  const remaining = shipsRemaining(board)
 
   return (
     <section>
-      <h3 className="text-xs font-semibold tracking-wide text-ocean-300 uppercase">{title}</h3>
-      <p className="mt-1 text-sm">
-        {remaining} of {statuses.length} ships afloat
-      </p>
-      <ul className="mt-2 flex flex-col gap-1">
+      <h3 className="text-xs font-semibold tracking-wide text-ocean-300 uppercase">
+        {title} — {remaining} of {statuses.length} afloat
+      </h3>
+      {/* The fleet reads as one line across the top of the screen rather than a tall list, so
+          both fleets, the key and both boards fit without scrolling. */}
+      <ul className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
         {statuses.map(({ ship, isSunk, hits }) => {
           const damageShown = isSunk ? ship.length : revealDamage ? hits : 0
 
           return (
-            <li key={ship.id} className="flex items-center justify-between gap-3 text-sm">
+            <li key={ship.id} className="flex items-center gap-1.5 text-xs">
               <span className={isSunk ? 'text-ocean-300 line-through' : ''}>{ship.name}</span>
-              <span className="flex items-center gap-1" aria-hidden="true">
+              <span className="flex items-center gap-0.5" aria-hidden="true">
                 {Array.from({ length: ship.length }, (_, cell) => (
                   <span
                     key={cell}
-                    className={`h-2.5 w-2.5 rounded-[2px] ${
+                    className={`h-2 w-2 rounded-[2px] ${
                       cell < damageShown
                         ? isSunk
                           ? 'bg-rose-600'

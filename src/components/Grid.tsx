@@ -75,7 +75,9 @@ export function Grid({ ariaLabel, cell, onCellClick, onCellEnter, onLeave }: Gri
       role="group"
       aria-label={ariaLabel}
       onMouseLeave={onLeave}
-      className="grid w-full max-w-[26rem] gap-px select-none"
+      // The board is capped by the height of the window as well as by its width, so a whole
+      // game still fits on a short screen without scrolling.
+      className="grid w-full max-w-[min(24rem,48vh)] gap-px select-none"
       style={{ gridTemplateColumns: `1.25rem repeat(${BOARD_SIZE}, minmax(0, 1fr))` }}
     >
       <span aria-hidden="true" />

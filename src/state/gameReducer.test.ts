@@ -107,6 +107,17 @@ describe('placement', () => {
 
     expect(state).toEqual(initialPlacementState())
   })
+
+  it('keeps the chosen orientation when the fleet is cleared', () => {
+    const state = run(
+      initialPlacementState(),
+      { type: 'setOrientation', orientation: 'vertical' },
+      { type: 'randomizeFleet' },
+      { type: 'clearFleet' },
+    )
+
+    expect(state).toEqual({ ...initialPlacementState(), orientation: 'vertical' })
+  })
 })
 
 describe('starting the game', () => {
