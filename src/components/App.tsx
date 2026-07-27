@@ -1,30 +1,26 @@
-/**
- * Application shell.
- *
- * Phase 1 intentionally renders only the layout and title: the game itself is
- * built in later phases on top of the pure domain layer. Having the shell,
- * tests, CI and deployment working first means every later phase ships to a
- * URL that is already known to work.
- */
+import { useGame } from '../state/useGame.ts'
+import { BattleScreen } from './BattleScreen.tsx'
+import { PlacementScreen } from './PlacementScreen.tsx'
+
 export function App() {
+  const [state, dispatch] = useGame()
+
   return (
     <div className="flex min-h-full flex-col bg-ocean-900 text-ocean-50">
-      <header className="border-b border-white/10 px-6 py-4">
-        <h1 className="text-xl font-semibold tracking-wide">Battleship</h1>
+      <header className="flex flex-wrap items-baseline gap-x-3 border-b border-white/10 px-6 py-2">
+        <h1 className="text-lg font-semibold tracking-wide">Battleship</h1>
         <p className="text-sm text-ocean-300">Play against an AI opponent</p>
       </header>
 
-      <main className="flex flex-1 items-center justify-center px-6 py-12">
-        <section className="max-w-md text-center">
-          <h2 className="text-2xl font-semibold">Setting sail</h2>
-          <p className="mt-3 text-ocean-300">
-            The project scaffold, test suite, continuous integration and deployment pipeline are in
-            place. Ship placement and battle arrive in the next milestones.
-          </p>
-        </section>
+      <main className="flex-1 px-6 py-4">
+        {state.phase === 'placement' ? (
+          <PlacementScreen state={state} dispatch={dispatch} />
+        ) : (
+          <BattleScreen state={state} dispatch={dispatch} />
+        )}
       </main>
 
-      <footer className="px-6 py-4 text-center text-xs text-ocean-300">
+      <footer className="px-6 py-2 text-center text-xs text-ocean-300">
         Single-player Battleship &middot; no accounts, no server
       </footer>
     </div>
