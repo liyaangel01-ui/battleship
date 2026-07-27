@@ -12,6 +12,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/domain/**', 'src/ai/**', 'src/state/**'],
+      exclude: ['**/*.test.ts', '**/testFixtures.ts'],
       thresholds: { lines: 90, functions: 90, branches: 85, statements: 90 },
     },
   },
