@@ -1,4 +1,5 @@
 import { useGame } from '../state/useGame.ts'
+import { BattleScreen } from './BattleScreen.tsx'
 import { PlacementScreen } from './PlacementScreen.tsx'
 
 export function App() {
@@ -15,20 +16,7 @@ export function App() {
         {state.phase === 'placement' ? (
           <PlacementScreen state={state} dispatch={dispatch} />
         ) : (
-          <section className="max-w-md">
-            <h2 className="text-lg font-semibold">Fleets are in position</h2>
-            <p className="mt-2 text-sm text-ocean-300">
-              Both fleets are placed and the opponent is waiting. The battle screen arrives in the
-              next milestone.
-            </p>
-            <button
-              type="button"
-              onClick={() => dispatch({ type: 'newGame' })}
-              className="mt-4 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm transition-colors hover:border-ocean-300/60"
-            >
-              Back to placement
-            </button>
-          </section>
+          <BattleScreen state={state} dispatch={dispatch} />
         )}
       </main>
 
