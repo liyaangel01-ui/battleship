@@ -77,3 +77,22 @@ Each entry follows the same shape:
 - **Prevention:** Run the _exact command CI runs_ locally, not a convenient approximation.
   `npm test` and `npm run test:coverage` are not interchangeable, and only the second one is
   the gate that matters.
+
+## BUG-004 — Component tests interfered with each other because rendered components were never unmounted
+
+- **Severity:** high (component test results were meaningless)
+- **Found in:** Phase 4, on the first component test file with more than one test in it
+- **Symptom:** Eleven of thirteen new tests failed with `Found multiple elements with the role
+"button" and name "Random fleet"`. The first test in the file passed; every later one saw
+  several copies of the whole interface.
+- **Reproduction:**
+  1. Write two tests in one file that each call `render(<App />)`.
+  2. Run them. The second test's queries find two of every element.
+- **Root cause:** Testing Library unmounts components automatically only when Vitest's
+  `globals` option is enabled. This project sets `globals: false` and imports `describe`/`it`
+  explicitly, so the automatic `afterEach(cleanup)` was never registered and each render was
+  appended to the same document.
+- **Fix:** `src/test/setup.ts` now registers `afterEach(cleanup)` itself.
+- **Prevention:** The failure was loud, which is the good case. The general lesson is that
+  turning off a convenience default (`globals`) can silently switch off unrelated behaviour
+  that depended on it — worth checking the first time a new kind of test is added.
