@@ -7,7 +7,6 @@ import {
   fireAt,
   hasFiredAt,
   isFleetDestroyed,
-  isHit,
   isShipSunk,
   shipName,
   shipStatuses,
@@ -31,7 +30,6 @@ describe('fireAt', () => {
 
     expect(result).toEqual({ kind: 'miss' })
     expect(hasFiredAt(after, at('J10'))).toBe(true)
-    expect(isHit(after, at('J10'))).toBe(false)
   })
 
   it('reports a hit and names the ship struck', () => {

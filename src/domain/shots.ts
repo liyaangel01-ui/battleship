@@ -12,11 +12,6 @@ export function canFireAt(board: Board, coordinate: Coordinate): boolean {
   return isInsideBoard(coordinate) && !hasFiredAt(board, coordinate)
 }
 
-/** Whether a square that has already been fired at contains part of a ship. */
-export function isHit(board: Board, coordinate: Coordinate): boolean {
-  return occupiedCells(board).has(coordinateKey(coordinate))
-}
-
 export function isShipSunk(board: Board, shipId: ShipId): boolean {
   const placement = board.placements.find((candidate) => candidate.shipId === shipId)
   if (!placement) return false

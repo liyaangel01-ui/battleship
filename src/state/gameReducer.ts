@@ -69,7 +69,10 @@ export function createGameReducer(rng: Rng) {
           : state
 
       case 'clearFleet':
-        return state.phase === 'placement' ? initialPlacementState() : state
+        // The chosen orientation is kept: clearing the board is not a request to change it.
+        return state.phase === 'placement'
+          ? { ...initialPlacementState(), orientation: state.orientation }
+          : state
 
       case 'startGame':
         return state.phase === 'placement' && isFleetComplete(state.playerBoard)

@@ -81,6 +81,7 @@ function StatusBanner({
 
     return (
       <section
+        role="status"
         className={`flex flex-wrap items-center justify-between gap-4 rounded-lg border px-4 py-3 ${
           playerWon
             ? 'border-emerald-400/60 bg-emerald-400/10'

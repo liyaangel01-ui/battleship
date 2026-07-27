@@ -159,7 +159,8 @@ describe('BattleScreen', () => {
   it('announces the win, reveals the enemy fleet and offers a new game', async () => {
     renderGame(gameOver('player'))
 
-    expect(screen.getByText('You win — the enemy fleet is destroyed.')).toBeInTheDocument()
+    // The outcome is announced, not merely coloured green.
+    expect(screen.getByRole('status')).toHaveTextContent('You win — the enemy fleet is destroyed.')
     expect(opponentSquare('A-1')).toHaveAccessibleName('A-1, your ship')
 
     await user.click(screen.getByRole('button', { name: 'Play again' }))

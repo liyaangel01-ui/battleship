@@ -1,4 +1,4 @@
-import { shipStatuses } from '../domain/shots.ts'
+import { shipStatuses, shipsRemaining } from '../domain/shots.ts'
 import type { Board } from '../domain/types.ts'
 
 interface FleetStatusProps {
@@ -15,7 +15,7 @@ interface FleetStatusProps {
 /** How much of a fleet is left, and which of its ships have been sunk. */
 export function FleetStatus({ title, board, revealDamage }: FleetStatusProps) {
   const statuses = shipStatuses(board)
-  const remaining = statuses.filter((status) => !status.isSunk).length
+  const remaining = shipsRemaining(board)
 
   return (
     <section>
