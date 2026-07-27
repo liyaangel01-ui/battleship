@@ -1,12 +1,9 @@
-/**
- * Application shell.
- *
- * Phase 1 intentionally renders only the layout and title: the game itself is
- * built in later phases on top of the pure domain layer. Having the shell,
- * tests, CI and deployment working first means every later phase ships to a
- * URL that is already known to work.
- */
+import { useGame } from '../state/useGame.ts'
+import { PlacementScreen } from './PlacementScreen.tsx'
+
 export function App() {
+  const [state, dispatch] = useGame()
+
   return (
     <div className="flex min-h-full flex-col bg-ocean-900 text-ocean-50">
       <header className="border-b border-white/10 px-6 py-4">
@@ -14,14 +11,25 @@ export function App() {
         <p className="text-sm text-ocean-300">Play against an AI opponent</p>
       </header>
 
-      <main className="flex flex-1 items-center justify-center px-6 py-12">
-        <section className="max-w-md text-center">
-          <h2 className="text-2xl font-semibold">Setting sail</h2>
-          <p className="mt-3 text-ocean-300">
-            The project scaffold, test suite, continuous integration and deployment pipeline are in
-            place. Ship placement and battle arrive in the next milestones.
-          </p>
-        </section>
+      <main className="flex-1 px-6 py-8">
+        {state.phase === 'placement' ? (
+          <PlacementScreen state={state} dispatch={dispatch} />
+        ) : (
+          <section className="max-w-md">
+            <h2 className="text-lg font-semibold">Fleets are in position</h2>
+            <p className="mt-2 text-sm text-ocean-300">
+              Both fleets are placed and the opponent is waiting. The battle screen arrives in the
+              next milestone.
+            </p>
+            <button
+              type="button"
+              onClick={() => dispatch({ type: 'newGame' })}
+              className="mt-4 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm transition-colors hover:border-ocean-300/60"
+            >
+              Back to placement
+            </button>
+          </section>
+        )}
       </main>
 
       <footer className="px-6 py-4 text-center text-xs text-ocean-300">
