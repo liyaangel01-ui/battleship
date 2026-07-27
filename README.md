@@ -2,9 +2,9 @@
 
 A single-player game of Battleship played in the browser against an AI opponent.
 
-> **Status: Phase 1 of 7 — project scaffold.** The application shell, test suite, continuous
-> integration and deployment pipeline are in place. Gameplay is added in the following
-> milestones, one reviewable pull request at a time.
+> **Status: Phase 6 of 7.** The game is fully playable: place your fleet, take alternating
+> shots against a hunt/target AI, and win or lose. Remaining work is the full-game end-to-end
+> test and the final documentation and deployment pass.
 
 ## Getting started
 
@@ -87,10 +87,26 @@ Two properties are worth knowing:
 Over 1,000 simulated games it sinks a full fleet in **57 shots on average** (best 28, worst 100) — clearly better than random guessing (~95) and clearly worse than perfect play (17),
 which is roughly where a human plays and makes for a fair game.
 
+### Accessibility and input
+
+The board is not a grid of coloured divs: every square is a real `<button>` whose accessible
+name says where it is and what is there (`"D-4, Destroyer sunk"`), so the game is playable
+without seeing it. Arrow keys walk the board and skip squares that can no longer be used, and
+the result of every shot is written into an `aria-live` region as a sentence — the announcement
+carries the outcome, not the colour of a square. A legend spells out what the colours mean.
+
+### Surviving a refresh
+
+The game is saved to `localStorage` after every move, so an accidental refresh does not lose a
+battle. A saved game is treated as **untrusted input**: it is validated field by field on the
+way in (`src/state/persistence.ts`), and anything unexpected — an older format, a hand-edited
+ship, a square off the board — is discarded in favour of a fresh game. Persistence is a
+convenience, and it is never allowed to break the game.
+
 ### Deliberate tradeoff: no backend
 
-The game runs entirely in the browser. There is no account, nothing to persist beyond the
-tab, and no second human to synchronise with, so the only thing a server would add is hiding
+The game runs entirely in the browser. There is no account, no data worth keeping on a server,
+and no second human to synchronise with, so the only thing a server would add is hiding
 the AI's ship positions from someone who opens developer tools — at the cost of an API,
 session handling and a second deployment. That complexity is not worth it for a single-player
 game, and the effort is better spent on tests and polish.
@@ -102,8 +118,8 @@ exact same rules module would run unchanged on a server if real multiplayer were
 
 **In scope:** manual ship placement with validation and a live preview (plus randomise and
 reset conveniences), a hunt/target AI opponent, alternating turns, hit/miss/sunk feedback with
-the sunk ship named, per-fleet ships-remaining tracking, win/loss detection, and a clear
-game-over screen.
+the sunk ship named, per-fleet ships-remaining tracking, a battle log, win/loss detection, a
+clear game-over screen, keyboard and screen-reader support, and a game that survives a refresh.
 
 **Intentionally excluded:** online multiplayer, accounts, difficulty selection,
 drag-and-drop placement, sound, and the salvo variant. Reducing scope on purpose is preferred
