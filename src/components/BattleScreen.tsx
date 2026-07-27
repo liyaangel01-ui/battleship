@@ -5,6 +5,7 @@ import type { GameAction, StartedState } from '../state/gameState.ts'
 import { BattleGrid } from './BattleGrid.tsx'
 import { EventLog } from './EventLog.tsx'
 import { FleetStatus } from './FleetStatus.tsx'
+import { Legend } from './Legend.tsx'
 
 /**
  * How long the opponent "thinks" before firing. Instant replies feel like a glitch rather
@@ -61,6 +62,7 @@ export function BattleScreen({ state, dispatch, aiDelayMs = AI_TURN_DELAY_MS }: 
           <FleetStatus title="Opponent fleet" board={state.aiBoard} revealDamage={isOver} />
           <FleetStatus title="Your fleet" board={state.playerBoard} revealDamage={true} />
           <EventLog entries={state.log} />
+          <Legend />
         </div>
       </div>
     </div>

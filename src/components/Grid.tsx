@@ -1,6 +1,22 @@
+import { useRef, type KeyboardEvent } from 'react'
+
 import { BOARD_SIZE } from '../domain/constants.ts'
-import { COLUMN_LABELS, ROW_LABELS, allCoordinates, coordinateKey } from '../domain/coordinates.ts'
-import type { Coordinate } from '../domain/types.ts'
+import {
+  COLUMN_LABELS,
+  ROW_LABELS,
+  allCoordinates,
+  coordinateKey,
+  isInsideBoard,
+} from '../domain/coordinates.ts'
+import type { Coordinate, CoordinateKey } from '../domain/types.ts'
+
+/** Which way each arrow key moves the focused square. */
+const ARROW_STEPS: Record<string, Coordinate> = {
+  ArrowUp: { row: -1, col: 0 },
+  ArrowDown: { row: 1, col: 0 },
+  ArrowLeft: { row: 0, col: -1 },
+  ArrowRight: { row: 0, col: 1 },
+}
 
 export interface GridCellProps {
   readonly coordinate: Coordinate
@@ -31,6 +47,29 @@ interface GridProps {
  * square announces its own state, rather than being a div that happens to respond to clicks.
  */
 export function Grid({ ariaLabel, cell, onCellClick, onCellEnter, onLeave }: GridProps) {
+  const squares = useRef(new Map<CoordinateKey, HTMLButtonElement>())
+
+  /**
+   * Arrow keys walk the board a square at a time, skipping squares that can no longer be used
+   * — otherwise reaching the middle of the board means pressing Tab fifty times.
+   */
+  function moveFocus(event: KeyboardEvent, from: Coordinate) {
+    const step = ARROW_STEPS[event.key]
+    if (!step) return
+
+    event.preventDefault()
+
+    let next = { row: from.row + step.row, col: from.col + step.col }
+    while (isInsideBoard(next)) {
+      const square = squares.current.get(coordinateKey(next))
+      if (square && !square.disabled) {
+        square.focus()
+        return
+      }
+      next = { row: next.row + step.row, col: next.col + step.col }
+    }
+  }
+
   return (
     <div
       role="group"
@@ -52,6 +91,8 @@ export function Grid({ ariaLabel, cell, onCellClick, onCellEnter, onLeave }: Gri
           row={row}
           rowLabel={rowLabel}
           cell={cell}
+          squares={squares.current}
+          onCellKeyDown={moveFocus}
           {...(onCellClick ? { onCellClick } : {})}
           {...(onCellEnter ? { onCellEnter } : {})}
         />
@@ -64,12 +105,16 @@ function RowCells({
   row,
   rowLabel,
   cell,
+  squares,
+  onCellKeyDown,
   onCellClick,
   onCellEnter,
 }: {
   readonly row: number
   readonly rowLabel: string
   readonly cell: (coordinate: Coordinate) => GridCellProps
+  readonly squares: Map<CoordinateKey, HTMLButtonElement>
+  readonly onCellKeyDown: (event: KeyboardEvent, coordinate: Coordinate) => void
   readonly onCellClick?: (coordinate: Coordinate) => void
   readonly onCellEnter?: (coordinate: Coordinate) => void
 }) {
@@ -88,9 +133,14 @@ function RowCells({
         return (
           <button
             key={coordinateKey(coordinate)}
+            ref={(square) => {
+              if (square) squares.set(coordinateKey(coordinate), square)
+              else squares.delete(coordinateKey(coordinate))
+            }}
             type="button"
             aria-label={props.label}
             disabled={props.disabled ?? false}
+            onKeyDown={(event) => onCellKeyDown(event, coordinate)}
             onClick={() => onCellClick?.(coordinate)}
             onMouseEnter={() => onCellEnter?.(coordinate)}
             onFocus={() => onCellEnter?.(coordinate)}

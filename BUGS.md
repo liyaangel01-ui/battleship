@@ -116,3 +116,23 @@ Each entry follows the same shape:
 - **Prevention:** The lesson is that "the AI cannot cheat" and "the player cannot cheat" are
   two different guarantees, and only the first was designed in. Anything rendered from a board
   the viewer should not fully see now has to say explicitly how much of it is being revealed.
+
+## BUG-006 — Saving the game to localStorage made tests contaminate each other
+
+- **Severity:** medium (the tests, not the game — but tests that lie are worse than none)
+- **Found in:** Phase 6, immediately after adding refresh persistence
+- **Symptom:** Eight component tests failed as soon as persistence was added, including ones
+  that had nothing to do with it: placement tests suddenly started with ships already on the
+  board, and `starts fresh when the browser has nothing saved` found a battle in progress.
+- **Reproduction:** with `afterEach(() => localStorage.clear())` removed from
+  `src/test/setup.ts`, run `npx vitest run src/components` — 8 of 27 tests fail.
+- **Root cause:** jsdom gives every test in a file the same `localStorage`. Each test saved its
+  game on the way out, and the next test's `useGame` dutifully restored it. The tests were no
+  longer independent: they passed or failed depending on what ran before them.
+- **Fix:** `afterEach(() => localStorage.clear())` in the shared test setup, next to the
+  existing Testing Library cleanup.
+- **Prevention:** The general rule this belongs to: anything that outlives a render — storage,
+  timers, module-level caches — has to be reset between tests, or the suite quietly becomes
+  order-dependent. The reason it was caught at once is that the persistence tests use a fake
+  storage they own, so the failures showed up as _other_ tests breaking, which is exactly the
+  signal that shared state is involved.

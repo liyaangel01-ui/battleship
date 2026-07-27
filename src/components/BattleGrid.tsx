@@ -19,7 +19,7 @@ const CELL_CLASSES: Record<CellState, string> = {
   unknown: 'bg-ocean-700/40',
   water: 'bg-ocean-700/40',
   ship: 'bg-ocean-300',
-  miss: 'bg-ocean-900',
+  miss: 'bg-ocean-900 ring-1 ring-inset ring-ocean-300/40',
   hit: 'bg-amber-400',
   sunk: 'bg-rose-600',
 }
