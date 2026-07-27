@@ -125,5 +125,7 @@ test('an unfinished game survives a reload', async ({ page }) => {
 
   await expect(opponent).toBeVisible()
   await expect(square(opponent, 'J-10')).toBeDisabled()
+  // The shot has since been followed by the opponent's reply, so it lives in the folded log.
+  await page.getByText(/^Battle log —/).click()
   await expect(page.getByText('You fired at J-10 — miss.')).toBeVisible()
 })

@@ -37,13 +37,23 @@ export function BattleScreen({ state, dispatch, aiDelayMs = AI_TURN_DELAY_MS }: 
     dispatch({ type: 'playerFire', coordinate })
   }
 
+  // The whole battle is meant to fit one screen: fleets and the key across the top, both boards
+  // side by side so the exchange of shots is visible at a glance, and the log folded away.
   return (
-    <div className="flex flex-col gap-8">
+    <div className="mx-auto flex max-w-5xl flex-col gap-3">
       <StatusBanner state={state} onNewGame={() => dispatch({ type: 'newGame' })} />
 
-      <div className="flex flex-col gap-8 xl:flex-row xl:gap-12">
-        <section className="w-full max-w-[26rem]">
-          <h2 className="mb-3 text-lg font-semibold">Opponent waters</h2>
+      <div className="grid gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-3 sm:grid-cols-2">
+        <FleetStatus title="Opponent fleet" board={state.aiBoard} revealDamage={isOver} />
+        <FleetStatus title="Your fleet" board={state.playerBoard} revealDamage={true} />
+        <div className="sm:col-span-2">
+          <Legend />
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 sm:gap-6">
+        <section>
+          <h2 className="mb-2 text-base font-semibold">Opponent waters</h2>
           <BattleGrid
             ariaLabel="Opponent waters"
             board={state.aiBoard}
@@ -53,18 +63,13 @@ export function BattleScreen({ state, dispatch, aiDelayMs = AI_TURN_DELAY_MS }: 
           />
         </section>
 
-        <section className="w-full max-w-[26rem]">
-          <h2 className="mb-3 text-lg font-semibold">Your waters</h2>
+        <section>
+          <h2 className="mb-2 text-base font-semibold">Your waters</h2>
           <BattleGrid ariaLabel="Your waters" board={state.playerBoard} revealShips={true} />
         </section>
-
-        <div className="flex w-full max-w-xs flex-col gap-6">
-          <FleetStatus title="Opponent fleet" board={state.aiBoard} revealDamage={isOver} />
-          <FleetStatus title="Your fleet" board={state.playerBoard} revealDamage={true} />
-          <EventLog entries={state.log} />
-          <Legend />
-        </div>
       </div>
+
+      <EventLog entries={state.log} />
     </div>
   )
 }
@@ -82,14 +87,14 @@ function StatusBanner({
     return (
       <section
         role="status"
-        className={`flex flex-wrap items-center justify-between gap-4 rounded-lg border px-4 py-3 ${
+        className={`flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-2 ${
           playerWon
             ? 'border-emerald-400/60 bg-emerald-400/10'
             : 'border-rose-500/60 bg-rose-500/10'
         }`}
       >
         <div>
-          <h2 className="text-lg font-semibold">
+          <h2 className="text-base font-semibold">
             {playerWon
               ? 'You win — the enemy fleet is destroyed.'
               : 'You lose — your fleet is gone.'}
@@ -101,7 +106,7 @@ function StatusBanner({
         <button
           type="button"
           onClick={onNewGame}
-          className="rounded-md bg-ocean-500 px-4 py-2.5 font-semibold text-white transition-colors hover:bg-ocean-300 hover:text-ocean-900"
+          className="rounded-md bg-ocean-500 px-4 py-2 font-semibold text-white transition-colors hover:bg-ocean-300 hover:text-ocean-900"
         >
           Play again
         </button>
@@ -114,7 +119,7 @@ function StatusBanner({
   return (
     <p
       aria-live="polite"
-      className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm"
+      className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm"
     >
       {yourTurn
         ? 'Your turn — pick a square in the opponent waters.'

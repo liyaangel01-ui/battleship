@@ -147,13 +147,17 @@ describe('BattleScreen', () => {
   it('counts the opponent fleet down as ships are sunk', async () => {
     renderGame()
 
-    expect(screen.getAllByText('5 of 5 ships afloat')).toHaveLength(2)
+    expect(
+      screen.getByRole('heading', { name: 'Opponent fleet — 5 of 5 afloat' }),
+    ).toBeInTheDocument()
 
     await user.click(opponentSquare('A-5'))
     await opponentShoots()
     await user.click(opponentSquare('B-5'))
 
-    expect(screen.getByText('4 of 5 ships afloat')).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Opponent fleet — 4 of 5 afloat' }),
+    ).toBeInTheDocument()
   })
 
   it('announces the win, reveals the enemy fleet and offers a new game', async () => {
