@@ -96,3 +96,23 @@ Each entry follows the same shape:
 - **Prevention:** The failure was loud, which is the good case. The general lesson is that
   turning off a convenience default (`globals`) can silently switch off unrelated behaviour
   that depended on it — worth checking the first time a new kind of test is added.
+
+## BUG-005 — The opponent's fleet panel revealed which ship a hit had struck
+
+- **Severity:** high (it gave away information the game is built to withhold)
+- **Found in:** Phase 5, while building the battle screen
+- **Symptom:** The "Opponent fleet" panel showed damage per ship. Hitting one square of the
+  enemy carrier lit up one segment of the carrier's row, so the player could tell which ship
+  they had found and how long it was — before sinking it.
+- **Reproduction:**
+  1. Start a battle and fire until you get a hit.
+  2. Read the opponent fleet panel: the hit is attributed to a named ship.
+- **Root cause:** The panel was rendered from the full `Board`, which knows every placement.
+  The AI is deliberately handed a restricted `OpponentView` so it cannot do this; the UI had
+  no such restriction and quietly leaked the same information to the player.
+- **Fix:** `FleetStatus` takes a `revealDamage` flag. Your own fleet shows damage; the
+  opponent's shows only which ships have been sunk, and their full damage is revealed when the
+  game ends. A `BattleScreen` test now asserts that a hit does not name a ship.
+- **Prevention:** The lesson is that "the AI cannot cheat" and "the player cannot cheat" are
+  two different guarantees, and only the first was designed in. Anything rendered from a board
+  the viewer should not fully see now has to say explicitly how much of it is being revealed.

@@ -139,7 +139,11 @@ describe('the setup controls', () => {
     await user.click(screen.getByRole('button', { name: 'Random fleet' }))
     await user.click(screen.getByRole('button', { name: 'Start battle' }))
 
-    expect(screen.getByRole('heading', { name: 'Fleets are in position' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Opponent waters' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Your waters' })).toBeInTheDocument()
+    expect(
+      screen.getByText('Your turn — pick a square in the opponent waters.'),
+    ).toBeInTheDocument()
   })
 
   it('labels the grid and its squares for screen readers', () => {
