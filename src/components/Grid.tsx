@@ -41,11 +41,7 @@ export function Grid({ ariaLabel, cell, onCellClick, onCellEnter, onLeave }: Gri
     >
       <span aria-hidden="true" />
       {COLUMN_LABELS.map((label) => (
-        <span
-          key={label}
-          aria-hidden="true"
-          className="pb-1 text-center text-xs text-ocean-300"
-        >
+        <span key={label} aria-hidden="true" className="pb-1 text-center text-xs text-ocean-300">
           {label}
         </span>
       ))}
