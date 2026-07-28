@@ -19,6 +19,10 @@
   --color-wave: #3a7ca8;
   --color-foam: #a8d4ec;
 
+  /* Reserved for the end of the game: gold for a win, red for a loss. */
+  --color-gold: #ffd447;
+  --color-alarm: #ff3b30;
+
   --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 }
 
@@ -138,6 +142,53 @@ body,
   opacity: 0;
 }
 
+/* The end-of-game banner: it lands rather than fades, which is the one moment in the game
+   worth a flourish. The glow is the only lit element on an otherwise flat interface. */
+@keyframes banner-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-banner-pop {
+  animation: banner-pop 320ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+/* The frame classes light the border only; the glow on the wording is a separate class so it
+   is not inherited by the button and the shot count inside. */
+.neon-gold {
+  border-color: var(--color-gold);
+  box-shadow:
+    0 0 2px var(--color-gold),
+    0 0 34px -6px var(--color-gold);
+}
+
+.neon-alarm {
+  border-color: var(--color-alarm);
+  box-shadow:
+    0 0 2px var(--color-alarm),
+    0 0 34px -6px var(--color-alarm);
+}
+
+.neon-gold-text {
+  color: var(--color-gold);
+  text-shadow: 0 0 18px rgb(255 212 71 / 0.6);
+}
+
+.neon-alarm-text {
+  color: var(--color-alarm);
+  text-shadow: 0 0 18px rgb(255 59 48 / 0.6);
+}
+
 .animate-reveal {
   animation: reveal 180ms ease-out both;
 }
@@ -159,6 +210,7 @@ body,
   .animate-splash-ring-late,
   .animate-splash-drop,
   .animate-splash-wash,
+  .animate-banner-pop,
   .animate-reveal {
     animation: none;
   }
