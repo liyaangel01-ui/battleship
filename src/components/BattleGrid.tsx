@@ -1,9 +1,18 @@
 import { boardCells, type CellState } from '../domain/cells.ts'
-import { coordinateKey, formatCoordinate } from '../domain/coordinates.ts'
+import { coordinateKey, formatCoordinate, sameCoordinate } from '../domain/coordinates.ts'
 import { occupiedCells } from '../domain/board.ts'
-import type { Board, Coordinate } from '../domain/types.ts'
-import { shipName } from '../domain/shots.ts'
+import type { Board, Coordinate, CoordinateKey, ShipId } from '../domain/types.ts'
+import { isShipSunk, shipName } from '../domain/shots.ts'
+import { FleetOverlay } from './FleetOverlay.tsx'
 import { Grid, type GridCellProps } from './Grid.tsx'
+import { ShipPeg } from './ShipSilhouette.tsx'
+
+/** The shot to play an animation on: the newest one, if it landed. */
+export interface Impact {
+  readonly coordinate: Coordinate
+  /** Restarts the animation for each new shot rather than replaying the old one. */
+  readonly shotNumber: number
+}
 
 interface BattleGridProps {
   readonly ariaLabel: string
@@ -13,15 +22,21 @@ interface BattleGridProps {
   readonly onFire?: (coordinate: Coordinate) => void
   /** Squares stop responding when it is not your turn or the game is over. */
   readonly frozen?: boolean
+  /** The square a shot has just landed on, when that shot hit without sinking anything. */
+  readonly impact?: Impact
+  /** The square a shot has just sunk a ship from; the splash covers the whole hull. */
+  readonly sink?: Impact
 }
 
+// A square carrying a mark of its own sits above the ship outlines, so the mark is never
+// painted over by the hull it belongs to.
 const CELL_CLASSES: Record<CellState, string> = {
-  unknown: 'bg-ocean-700/40',
-  water: 'bg-ocean-700/40',
-  ship: 'bg-ocean-300',
-  miss: 'bg-ocean-900 ring-1 ring-inset ring-ocean-300/40',
-  hit: 'bg-amber-400',
-  sunk: 'bg-rose-600',
+  unknown: 'bg-ink',
+  water: 'bg-ink',
+  ship: 'z-10',
+  miss: 'bg-ink',
+  hit: 'z-10 bg-blast/15',
+  sunk: 'z-10 bg-ember/20',
 }
 
 const CELL_DESCRIPTIONS: Record<CellState, string> = {
@@ -34,14 +49,31 @@ const CELL_DESCRIPTIONS: Record<CellState, string> = {
 }
 
 /** One player's waters during the battle. */
-export function BattleGrid({ ariaLabel, board, revealShips, onFire, frozen }: BattleGridProps) {
+export function BattleGrid({
+  ariaLabel,
+  board,
+  revealShips,
+  onFire,
+  frozen,
+  impact,
+  sink,
+}: BattleGridProps) {
   const cells = boardCells(board, revealShips)
   const occupied = occupiedCells(board)
+  const sinkingCells = sinkingShipCells(occupied, sink)
+  const sinkShotNumber = sink?.shotNumber
+
+  // Hulls are drawn only for ships the viewer is entitled to see: your own fleet, and the
+  // opponent's ships once they have been sunk. Nothing else reaches the page.
+  const visiblePlacements = revealShips
+    ? board.placements
+    : board.placements.filter((placement) => isShipSunk(board, placement.shipId))
 
   function cell(coordinate: Coordinate): GridCellProps {
     const key = coordinateKey(coordinate)
     const cellState = cells.get(key) ?? 'unknown'
     const shipId = occupied.get(key)
+    const isFireable = Boolean(onFire) && frozen !== true && cellState === 'unknown'
 
     // A sunk ship is named because both players are told what went down; a ship that is
     // merely hit is not, and neither is an intact one on the opponent's board.
@@ -50,13 +82,145 @@ export function BattleGrid({ ariaLabel, board, revealShips, onFire, frozen }: Ba
 
     return {
       coordinate,
-      className: `${CELL_CLASSES[cellState]} ${
-        onFire && !frozen && cellState === 'unknown' ? 'cursor-crosshair hover:bg-ocean-500' : ''
-      }`,
+      className: `${CELL_CLASSES[cellState]} ${isFireable ? 'cursor-crosshair hover:bg-chalk/10' : ''}`,
       label: `${formatCoordinate(coordinate)}, ${detail}`,
       disabled: !onFire || frozen === true || cellState !== 'unknown',
+      content: (
+        <>
+          {isFireable ? <Reticle /> : null}
+          <Marker state={cellState} />
+          {impact && sameCoordinate(impact.coordinate, coordinate) ? (
+            <ImpactBurst key={impact.shotNumber} />
+          ) : null}
+          {sinkShotNumber !== undefined && sinkingCells.has(key) ? (
+            <Splash
+              key={sinkShotNumber}
+              delayMs={(sinkingCells.get(key) ?? 0) * SPLASH_STAGGER_MS}
+            />
+          ) : null}
+        </>
+      ),
     }
   }
 
-  return <Grid ariaLabel={ariaLabel} cell={cell} {...(onFire ? { onCellClick: onFire } : {})} />
+  return (
+    <Grid ariaLabel={ariaLabel} cell={cell} {...(onFire ? { onCellClick: onFire } : {})}>
+      <FleetOverlay
+        placements={visiblePlacements}
+        className={revealShips ? 'z-0 text-chalk/60' : 'z-0 text-ember/80'}
+        reveal={!revealShips}
+      />
+    </Grid>
+  )
+}
+
+/** The permanent mark left on a square once it has been fired at. */
+function Marker({ state }: { readonly state: CellState }) {
+  // An unfired square shows the empty peg hole of the printed board, faint enough that a
+  // miss peg beside it is never in doubt.
+  if (state === 'unknown') {
+    return (
+      <span
+        aria-hidden="true"
+        className="pointer-events-none block h-1/3 w-1/3 rounded-full border border-line/45"
+      />
+    )
+  }
+
+  if (state === 'miss') {
+    return (
+      <span
+        aria-hidden="true"
+        className="pointer-events-none block h-2/5 w-2/5 rounded-full border-2 border-chalk/80"
+      />
+    )
+  }
+
+  // One of your own ships, still intact: the peg standing in that square.
+  if (state === 'ship') return <ShipPeg />
+
+  if (state === 'hit' || state === 'sunk') {
+    return (
+      <span
+        aria-hidden="true"
+        className={`pointer-events-none block h-2/5 w-2/5 rounded-full ${
+          state === 'sunk' ? 'bg-ember' : 'bg-blast'
+        }`}
+      />
+    )
+  }
+
+  return null
+}
+
+/** A targeting reticle shown while a square is under the cursor or keyboard focus. */
+function Reticle() {
+  return (
+    <span
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-[15%] opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+    >
+      <span className="absolute inset-0 rounded-full border border-chalk/70" />
+      <span className="absolute top-1/2 left-[-15%] h-px w-[30%] bg-chalk/70" />
+      <span className="absolute top-1/2 right-[-15%] h-px w-[30%] bg-chalk/70" />
+    </span>
+  )
+}
+
+/** A flat radial burst that plays once when a shot lands, leaving the hit marker behind. */
+function ImpactBurst() {
+  return (
+    <span aria-hidden="true" className="pointer-events-none absolute inset-0 z-20">
+      <span className="animate-impact-ring absolute inset-[15%] rounded-full border-2 border-ember" />
+      <span className="animate-impact-spikes absolute inset-[-10%] bg-blast" />
+      <span className="animate-impact-flash absolute inset-[18%] rounded-full bg-flash shadow-[0_0_0_4px_var(--color-blast)]" />
+    </span>
+  )
+}
+
+/** How much later each square along the hull splashes, so the ship goes down as a ripple. */
+const SPLASH_STAGGER_MS = 45
+
+/**
+ * Cold rings and a thrown drop, played once across every square of a ship as it goes down.
+ * Flat and blue so that a sinking never reads as another hit.
+ */
+function Splash({ delayMs }: { readonly delayMs: number }) {
+  return (
+    <span aria-hidden="true" className="pointer-events-none absolute inset-0 z-20">
+      <span
+        className="animate-splash-wash bg-wave absolute inset-0"
+        style={{ animationDelay: `${delayMs}ms` }}
+      />
+      <span
+        className="animate-splash-ring absolute inset-[8%] rounded-full border-2 border-foam"
+        style={{ animationDelay: `${delayMs}ms` }}
+      />
+      <span
+        className="animate-splash-ring-late absolute inset-[20%] rounded-full border-2 border-wave"
+        style={{ animationDelay: `${delayMs + 110}ms` }}
+      />
+      <span
+        className="animate-splash-drop absolute inset-[32%] rounded-full bg-foam"
+        style={{ animationDelay: `${delayMs}ms` }}
+      />
+    </span>
+  )
+}
+
+/**
+ * The squares of the ship a shot has just sunk, each with its position along the hull, so the
+ * splash can run from one end to the other.
+ */
+function sinkingShipCells(
+  occupied: ReadonlyMap<CoordinateKey, ShipId>,
+  sink: Impact | undefined,
+): ReadonlyMap<CoordinateKey, number> {
+  if (!sink) return new Map()
+
+  const sunkShipId = occupied.get(coordinateKey(sink.coordinate))
+  if (!sunkShipId) return new Map()
+
+  const hull = [...occupied].filter(([, shipId]) => shipId === sunkShipId).map(([key]) => key)
+  return new Map(hull.map((key, index) => [key, index]))
 }
