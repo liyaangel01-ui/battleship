@@ -43,14 +43,16 @@ export function BattleScreen({ state, dispatch, aiDelayMs = AI_TURN_DELAY_MS }: 
     dispatch({ type: 'newGame' })
   }
 
-  // The burst is read off the newest log entry rather than stored separately, so there is no
-  // second copy of what happened and nothing to keep in step with the game.
+  // Both animations are read off the newest log entry rather than stored separately, so there
+  // is no second copy of what happened and nothing to keep in step with the game. A shot that
+  // sinks a ship plays the splash instead of the burst: the sinking is the event.
   const lastShot = state.log.at(-1)
-  const impact: Impact | undefined =
-    lastShot && lastShot.outcome !== 'miss'
-      ? { coordinate: lastShot.coordinate, shotNumber: lastShot.shotNumber }
-      : undefined
-  const impactOn = lastShot?.by
+  const shot: Impact | undefined = lastShot
+    ? { coordinate: lastShot.coordinate, shotNumber: lastShot.shotNumber }
+    : undefined
+  const impact = lastShot?.outcome === 'hit' ? shot : undefined
+  const sink = lastShot?.outcome === 'sunk' ? shot : undefined
+  const shotBy = lastShot?.by
 
   // The whole battle is meant to fit one screen: fleets and the key across the top, both boards
   // side by side with the title and the turn between them, and the log folded away below.
@@ -59,8 +61,13 @@ export function BattleScreen({ state, dispatch, aiDelayMs = AI_TURN_DELAY_MS }: 
       <div className="grid gap-3 border border-edge px-4 py-3 sm:grid-cols-2">
         <FleetStatus title="Opponent fleet" board={state.aiBoard} revealDamage={isOver} />
         <FleetStatus title="Your fleet" board={state.playerBoard} revealDamage={true} />
-        <div className="sm:col-span-2">
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 sm:col-span-2">
           <Legend />
+          {isOver ? null : (
+            <CommandButton onClick={newGame} ariaLabel="Start a new game">
+              New game
+            </CommandButton>
+          )}
         </div>
       </div>
 
@@ -72,18 +79,14 @@ export function BattleScreen({ state, dispatch, aiDelayMs = AI_TURN_DELAY_MS }: 
             revealShips={isOver}
             onFire={fire}
             frozen={state.phase !== 'playerTurn'}
-            {...(impact && impactOn === 'player' ? { impact } : {})}
+            {...(impact && shotBy === 'player' ? { impact } : {})}
+            {...(sink && shotBy === 'player' ? { sink } : {})}
           />
         </BoardPanel>
 
         <div className="order-first flex flex-col items-center gap-4 py-2 text-center lg:order-none">
           <Wordmark className="w-full max-w-[13rem]" />
           <Status state={state} onNewGame={newGame} />
-          {!isOver && (
-            <CommandButton onClick={newGame} ariaLabel="Start a new game">
-              New game
-            </CommandButton>
-          )}
         </div>
 
         <BoardPanel title="Your waters">
@@ -91,7 +94,8 @@ export function BattleScreen({ state, dispatch, aiDelayMs = AI_TURN_DELAY_MS }: 
             ariaLabel="Your waters"
             board={state.playerBoard}
             revealShips={true}
-            {...(impact && impactOn === 'ai' ? { impact } : {})}
+            {...(impact && shotBy === 'ai' ? { impact } : {})}
+            {...(sink && shotBy === 'ai' ? { sink } : {})}
           />
         </BoardPanel>
       </div>
@@ -104,7 +108,7 @@ export function BattleScreen({ state, dispatch, aiDelayMs = AI_TURN_DELAY_MS }: 
 function BoardPanel({ title, children }: { readonly title: string; readonly children: ReactNode }) {
   return (
     <section className="flex flex-col items-center">
-      <h2 className="mb-2 font-mono text-xs tracking-[0.2em] text-fog uppercase">{title}</h2>
+      <h2 className="mb-2 text-xs tracking-[0.2em] text-fog uppercase">{title}</h2>
       {children}
     </section>
   )
@@ -135,7 +139,7 @@ function Status({
   }
 
   return (
-    <p aria-live="polite" className="font-mono text-xs tracking-wide text-fog uppercase">
+    <p aria-live="polite" className="text-xs tracking-wide text-fog uppercase">
       {state.phase === 'playerTurn'
         ? 'Your turn — pick a square in the opponent waters.'
         : 'The opponent is taking aim…'}

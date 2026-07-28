@@ -1,12 +1,13 @@
 import { boardCells, type CellState } from '../domain/cells.ts'
 import { coordinateKey, formatCoordinate, sameCoordinate } from '../domain/coordinates.ts'
 import { occupiedCells } from '../domain/board.ts'
-import type { Board, Coordinate } from '../domain/types.ts'
+import type { Board, Coordinate, CoordinateKey, ShipId } from '../domain/types.ts'
 import { isShipSunk, shipName } from '../domain/shots.ts'
 import { FleetOverlay } from './FleetOverlay.tsx'
 import { Grid, type GridCellProps } from './Grid.tsx'
+import { ShipPeg } from './ShipSilhouette.tsx'
 
-/** The shot to play the impact burst on: the newest one, if it landed. */
+/** The shot to play an animation on: the newest one, if it landed. */
 export interface Impact {
   readonly coordinate: Coordinate
   /** Restarts the animation for each new shot rather than replaying the old one. */
@@ -21,13 +22,18 @@ interface BattleGridProps {
   readonly onFire?: (coordinate: Coordinate) => void
   /** Squares stop responding when it is not your turn or the game is over. */
   readonly frozen?: boolean
+  /** The square a shot has just landed on, when that shot hit without sinking anything. */
   readonly impact?: Impact
+  /** The square a shot has just sunk a ship from; the splash covers the whole hull. */
+  readonly sink?: Impact
 }
 
+// A square carrying a mark of its own sits above the ship outlines, so the mark is never
+// painted over by the hull it belongs to.
 const CELL_CLASSES: Record<CellState, string> = {
   unknown: 'bg-ink',
   water: 'bg-ink',
-  ship: 'bg-chalk/8',
+  ship: 'z-10',
   miss: 'bg-ink',
   hit: 'z-10 bg-blast/15',
   sunk: 'z-10 bg-ember/20',
@@ -50,9 +56,11 @@ export function BattleGrid({
   onFire,
   frozen,
   impact,
+  sink,
 }: BattleGridProps) {
   const cells = boardCells(board, revealShips)
   const occupied = occupiedCells(board)
+  const sinkingCells = sinkingShipCells(occupied, sink)
 
   // Hulls are drawn only for ships the viewer is entitled to see: your own fleet, and the
   // opponent's ships once they have been sunk. Nothing else reaches the page.
@@ -83,6 +91,7 @@ export function BattleGrid({
           {impact && sameCoordinate(impact.coordinate, coordinate) ? (
             <ImpactBurst key={impact.shotNumber} />
           ) : null}
+          {sink && sinkingCells.has(key) ? <Splash key={sink.shotNumber} /> : null}
         </>
       ),
     }
@@ -121,6 +130,9 @@ function Marker({ state }: { readonly state: CellState }) {
     )
   }
 
+  // One of your own ships, still intact: the peg standing in that square.
+  if (state === 'ship') return <ShipPeg />
+
   if (state === 'hit' || state === 'sunk') {
     return (
       <span
@@ -158,4 +170,31 @@ function ImpactBurst() {
       <span className="animate-impact-flash absolute inset-[18%] rounded-full bg-flash shadow-[0_0_0_4px_var(--color-blast)]" />
     </span>
   )
+}
+
+/**
+ * Cold rings and a thrown drop, played once across every square of a ship as it goes down.
+ * Flat and blue so that a sinking never reads as another hit.
+ */
+function Splash() {
+  return (
+    <span aria-hidden="true" className="pointer-events-none absolute inset-0 z-20">
+      <span className="animate-splash-ring absolute inset-[20%] rounded-full border-2 border-wave" />
+      <span className="animate-splash-ring-late absolute inset-[26%] rounded-full border border-foam" />
+      <span className="animate-splash-drop absolute inset-[38%] rounded-full bg-foam" />
+    </span>
+  )
+}
+
+/** The squares of the ship a shot has just sunk, if that is what the shot did. */
+function sinkingShipCells(
+  occupied: ReadonlyMap<CoordinateKey, ShipId>,
+  sink: Impact | undefined,
+): ReadonlySet<CoordinateKey> {
+  if (!sink) return new Set()
+
+  const sunkShipId = occupied.get(coordinateKey(sink.coordinate))
+  if (!sunkShipId) return new Set()
+
+  return new Set([...occupied].filter(([, shipId]) => shipId === sunkShipId).map(([key]) => key))
 }

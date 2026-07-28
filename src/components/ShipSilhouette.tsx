@@ -33,7 +33,8 @@ interface ShipSilhouetteProps {
  * The outline of one ship, drawn to fill exactly the squares it occupies.
  *
  * Purely decorative: it is hidden from assistive technology and never receives pointer
- * events, so the squares underneath remain the only thing a player can click or focus.
+ * events, so the squares underneath remain the only thing a player can click or focus. The
+ * peg holes belong to the squares themselves — see `ShipPeg`.
  */
 export function ShipSilhouette({ shipId, orientation, className }: ShipSilhouetteProps) {
   const length = SHIP_LENGTHS.get(shipId) ?? 1
@@ -43,6 +44,9 @@ export function ShipSilhouette({ shipId, orientation, className }: ShipSilhouett
   return (
     <svg
       viewBox={vertical ? `0 0 ${CELL} ${long}` : `0 0 ${long} ${CELL}`}
+      // Stretched to its squares rather than scaled to fit them: fitting letterboxes the hull
+      // inside its span, which pulls the ends away from the squares they belong to.
+      preserveAspectRatio="none"
       className={className}
       aria-hidden="true"
       focusable="false"
@@ -50,17 +54,23 @@ export function ShipSilhouette({ shipId, orientation, className }: ShipSilhouett
       {/* Drawn once, bow to the right, then given a quarter turn for a vertical ship. */}
       <g fill="currentColor" transform={vertical ? `translate(${CELL} 0) rotate(90)` : undefined}>
         <path d={hull(length)} />
-        {/* One peg hole per square, so a ship reads as the squares it occupies. */}
-        {Array.from({ length }, (_, square) => (
-          <circle
-            key={square}
-            cx={square * CELL + CELL / 2}
-            cy={50}
-            r={14}
-            fill="var(--color-ink)"
-          />
-        ))}
       </g>
     </svg>
+  )
+}
+
+/**
+ * The peg hole punched through a ship in one square.
+ *
+ * Drawn by the square itself rather than by the hull above it, which spans several squares:
+ * a hull is scaled to fit its span, so pegs drawn inside it land a pixel or two off the
+ * centres of the squares. Drawn per square, a peg is centred by construction.
+ */
+export function ShipPeg() {
+  return (
+    <span
+      aria-hidden="true"
+      className="pointer-events-none block h-[30%] w-[30%] rounded-full bg-ink"
+    />
   )
 }

@@ -27,7 +27,7 @@ const KEYS: readonly { readonly label: string; readonly swatch: ReactNode }[] = 
 /** What the marks on the boards mean, so the game does not have to be guessed at. */
 export function Legend() {
   return (
-    <ul className="flex flex-wrap gap-x-5 gap-y-2 font-mono text-[0.65rem] tracking-widest text-fog uppercase">
+    <ul className="flex flex-wrap gap-x-5 gap-y-2 text-[0.65rem] tracking-widest text-fog uppercase">
       {KEYS.map(({ label, swatch }) => (
         <li key={label} className="flex items-center gap-2">
           <span aria-hidden="true" className="flex h-3 w-4 items-center justify-center">

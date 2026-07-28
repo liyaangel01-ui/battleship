@@ -29,7 +29,7 @@ export function FleetList({ board, selectedShipId, onSelect, onRemove }: FleetLi
                   : 'border-edge bg-ink text-chalk hover:border-chalk/70'
               }`}
             >
-              <span className="font-mono text-xs tracking-widest uppercase">{ship.name}</span>
+              <span className="text-xs tracking-widest uppercase">{ship.name}</span>
               <span className="flex items-center gap-1" aria-hidden="true">
                 {Array.from({ length: ship.length }, (_, cell) => (
                   <span
@@ -51,7 +51,7 @@ export function FleetList({ board, selectedShipId, onSelect, onRemove }: FleetLi
                 type="button"
                 aria-label={`Remove ${ship.name}`}
                 onClick={() => onRemove(ship.id)}
-                className="border border-edge px-2 py-2 font-mono text-[0.65rem] tracking-widest text-fog uppercase transition-colors hover:border-chalk/70 hover:text-chalk focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk"
+                className="border border-edge px-2 py-2 text-[0.65rem] tracking-widest text-fog uppercase transition-colors hover:border-chalk/70 hover:text-chalk focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk"
               >
                 Remove
               </button>

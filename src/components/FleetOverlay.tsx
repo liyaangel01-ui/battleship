@@ -37,7 +37,7 @@ export function FleetOverlay({ placements, className, reveal }: FleetOverlayProp
               gridColumn: `${origin.col + 2} / span ${horizontal ? span : 1}`,
               gridRow: `${origin.row + 2} / span ${horizontal ? 1 : span}`,
             }}
-            className={`pointer-events-none flex items-center justify-center p-[3px] ${className} ${
+            className={`pointer-events-none flex items-center justify-center ${className} ${
               reveal ? 'animate-reveal' : ''
             }`}
           >

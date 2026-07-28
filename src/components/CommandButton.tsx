@@ -31,7 +31,7 @@ export function CommandButton({
       disabled={disabled ?? false}
       {...(pressed === undefined ? {} : { 'aria-pressed': pressed })}
       {...(ariaLabel ? { 'aria-label': ariaLabel } : {})}
-      className={`border px-3 py-2 font-mono text-xs tracking-widest uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk ${
+      className={`border px-3 py-2 text-xs tracking-widest uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk ${
         pressed
           ? 'border-chalk bg-chalk text-ink'
           : 'border-chalk/70 bg-ink text-chalk hover:bg-chalk hover:text-ink'

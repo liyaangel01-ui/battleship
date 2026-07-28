@@ -91,7 +91,7 @@ export function Grid({ ariaLabel, cell, onCellClick, onCellEnter, onLeave, child
           key={label}
           aria-hidden="true"
           style={{ gridColumn: col + 2, gridRow: 1 }}
-          className="pb-1.5 text-center font-mono text-[0.65rem] tracking-widest text-fog"
+          className="pb-1.5 text-center text-[0.65rem] tracking-widest text-fog"
         >
           {label}
         </span>
@@ -139,7 +139,7 @@ function RowCells({
       <span
         aria-hidden="true"
         style={{ gridColumn: 1, gridRow: row + 2 }}
-        className="self-center pr-1.5 text-right font-mono text-[0.65rem] leading-none text-fog"
+        className="self-center pr-1.5 text-right text-[0.65rem] leading-none text-fog"
       >
         {rowLabel}
       </span>

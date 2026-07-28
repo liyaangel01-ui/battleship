@@ -15,7 +15,10 @@
   --color-blast: #d95f18;
   --color-ember: #b3261e;
 
-  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+  /* The two cold colours, used only for a ship going down. */
+  --color-wave: #3a7ca8;
+  --color-foam: #a8d4ec;
+
   --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 }
 
@@ -78,6 +81,43 @@ body,
   animation: impact-spikes 420ms ease-out forwards;
 }
 
+/* A ship going down: two rings thrown out across the hull, and a drop thrown up from the
+   middle of each square. Cold and flat, so it never reads as another hit. */
+@keyframes splash-ring {
+  0% {
+    opacity: 0.85;
+    transform: scale(0.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+
+@keyframes splash-drop {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-70%) scale(0.3);
+  }
+}
+
+.animate-splash-ring {
+  animation: splash-ring 420ms ease-out forwards;
+}
+
+.animate-splash-ring-late {
+  animation: splash-ring 420ms ease-out 90ms forwards;
+  opacity: 0;
+}
+
+.animate-splash-drop {
+  animation: splash-drop 400ms ease-out forwards;
+}
+
 .animate-reveal {
   animation: reveal 180ms ease-out both;
 }
@@ -95,13 +135,19 @@ body,
   .animate-impact-flash,
   .animate-impact-ring,
   .animate-impact-spikes,
+  .animate-splash-ring,
+  .animate-splash-ring-late,
+  .animate-splash-drop,
   .animate-reveal {
     animation: none;
   }
 
   .animate-impact-flash,
   .animate-impact-ring,
-  .animate-impact-spikes {
+  .animate-impact-spikes,
+  .animate-splash-ring,
+  .animate-splash-ring-late,
+  .animate-splash-drop {
     opacity: 0;
   }
 }

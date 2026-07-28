@@ -11,7 +11,7 @@ export function EventLog({ entries }: { readonly entries: readonly LogEntry[] })
   const newest = entries.at(-1)
 
   return (
-    <section className="border border-edge bg-ink px-4 py-2 font-mono">
+    <section className="border border-edge bg-ink px-4 py-2">
       <p aria-live="polite" className="min-h-5 text-sm text-chalk">
         {newest ? describeShot(newest) : 'No shots fired yet.'}
       </p>

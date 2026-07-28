@@ -19,7 +19,7 @@ export function FleetStatus({ title, board, revealDamage }: FleetStatusProps) {
 
   return (
     <section>
-      <h3 className="font-mono text-[0.65rem] tracking-[0.2em] text-fog uppercase">
+      <h3 className="text-[0.65rem] tracking-[0.2em] text-fog uppercase">
         {title} — {remaining} of {statuses.length} afloat
       </h3>
       {/* The fleet reads as one line across the top of the screen rather than a tall list, so

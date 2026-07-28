@@ -9,6 +9,7 @@ import { CommandButton } from './CommandButton.tsx'
 import { FleetList } from './FleetList.tsx'
 import { FleetOverlay } from './FleetOverlay.tsx'
 import { Grid, type GridCellProps } from './Grid.tsx'
+import { ShipPeg } from './ShipSilhouette.tsx'
 import { Wordmark } from './Wordmark.tsx'
 
 interface PlacementScreenProps {
@@ -46,6 +47,7 @@ export function PlacementScreen({ state, dispatch }: PlacementScreenProps) {
       label: shipName
         ? `${formatCoordinate(coordinate)}, ${shipName} — click to remove`
         : `${formatCoordinate(coordinate)}, empty water`,
+      ...(shipId ? { content: <ShipPeg /> } : {}),
     }
   }
 
@@ -61,9 +63,7 @@ export function PlacementScreen({ state, dispatch }: PlacementScreenProps) {
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
       <div className="flex flex-col items-center gap-2 text-center">
         <Wordmark className="w-full max-w-[16rem]" />
-        <p className="font-mono text-[0.65rem] tracking-[0.2em] text-fog uppercase">
-          Position your fleet
-        </p>
+        <p className="text-[0.65rem] tracking-[0.2em] text-fog uppercase">Position your fleet</p>
       </div>
 
       <div className="flex flex-col items-start gap-8 lg:flex-row lg:gap-12">
@@ -87,7 +87,7 @@ export function PlacementScreen({ state, dispatch }: PlacementScreenProps) {
 
         <div className="flex w-full max-w-xs flex-col gap-5">
           <fieldset>
-            <legend className="mb-2 font-mono text-[0.65rem] tracking-[0.2em] text-fog uppercase">
+            <legend className="mb-2 text-[0.65rem] tracking-[0.2em] text-fog uppercase">
               Orientation
             </legend>
             <div className="flex gap-2">
@@ -105,9 +105,7 @@ export function PlacementScreen({ state, dispatch }: PlacementScreenProps) {
           </fieldset>
 
           <div>
-            <h2 className="mb-2 font-mono text-[0.65rem] tracking-[0.2em] text-fog uppercase">
-              Fleet
-            </h2>
+            <h2 className="mb-2 text-[0.65rem] tracking-[0.2em] text-fog uppercase">Fleet</h2>
             <FleetList
               board={playerBoard}
               selectedShipId={selectedShipId}
@@ -168,7 +166,9 @@ function previewFor(
 }
 
 function cellClassName(inPreview: boolean, previewIsLegal: boolean, hasShip: boolean): string {
-  if (inPreview) return previewIsLegal ? 'bg-chalk/30' : 'bg-ember/50'
-  if (hasShip) return 'bg-chalk/8 hover:bg-chalk/15'
+  if (inPreview) return previewIsLegal ? 'z-10 bg-chalk/30' : 'z-10 bg-ember/50'
+  // A square holding a ship sits above the hull drawn over the board, so its peg is not
+  // painted over by the hull it belongs to.
+  if (hasShip) return 'z-10 hover:bg-chalk/15'
   return 'bg-ink hover:bg-chalk/10'
 }
