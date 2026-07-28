@@ -23,18 +23,24 @@ export function FleetList({ board, selectedShipId, onSelect, onRemove }: FleetLi
               aria-pressed={isSelected}
               aria-label={`${ship.name}, ${ship.length} squares, ${isPlaced ? 'placed' : 'not yet placed'}`}
               onClick={() => onSelect(ship.id)}
-              className={`flex flex-1 items-center justify-between gap-3 rounded-md border px-3 py-2 text-left transition-colors ${
+              className={`flex flex-1 items-center justify-between gap-3 border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk ${
                 isSelected
-                  ? 'border-ocean-300 bg-ocean-700/60'
-                  : 'border-white/10 bg-white/5 hover:border-ocean-300/60'
+                  ? 'border-chalk bg-chalk text-ink'
+                  : 'border-edge bg-ink text-chalk hover:border-chalk/70'
               }`}
             >
-              <span className="text-sm font-medium">{ship.name}</span>
+              <span className="font-mono text-xs tracking-widest uppercase">{ship.name}</span>
               <span className="flex items-center gap-1" aria-hidden="true">
                 {Array.from({ length: ship.length }, (_, cell) => (
                   <span
                     key={cell}
-                    className={`h-2.5 w-2.5 rounded-[2px] ${isPlaced ? 'bg-ocean-300' : 'bg-white/20'}`}
+                    className={`h-2.5 w-2.5 ${
+                      isPlaced
+                        ? isSelected
+                          ? 'bg-ink'
+                          : 'bg-chalk/70'
+                        : `border ${isSelected ? 'border-ink/40' : 'border-line/70'}`
+                    }`}
                   />
                 ))}
               </span>
@@ -45,7 +51,7 @@ export function FleetList({ board, selectedShipId, onSelect, onRemove }: FleetLi
                 type="button"
                 aria-label={`Remove ${ship.name}`}
                 onClick={() => onRemove(ship.id)}
-                className="rounded-md border border-white/10 px-2 py-2 text-xs text-ocean-300 transition-colors hover:border-ocean-300/60 hover:text-ocean-50"
+                className="border border-edge px-2 py-2 font-mono text-[0.65rem] tracking-widest text-fog uppercase transition-colors hover:border-chalk/70 hover:text-chalk focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk"
               >
                 Remove
               </button>
