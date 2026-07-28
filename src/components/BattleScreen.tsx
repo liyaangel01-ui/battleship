@@ -138,8 +138,10 @@ function Status({
     )
   }
 
+  // The line is held at the height of its longest wording, so the title above it never moves
+  // as the turn changes.
   return (
-    <p aria-live="polite" className="text-xs tracking-wide text-fog uppercase">
+    <p aria-live="polite" className="h-8 text-xs tracking-wide text-fog uppercase">
       {state.phase === 'playerTurn'
         ? 'Your turn — pick a square in the opponent waters.'
         : 'The opponent is taking aim…'}

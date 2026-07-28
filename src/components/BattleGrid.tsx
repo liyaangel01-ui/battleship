@@ -61,6 +61,7 @@ export function BattleGrid({
   const cells = boardCells(board, revealShips)
   const occupied = occupiedCells(board)
   const sinkingCells = sinkingShipCells(occupied, sink)
+  const sinkShotNumber = sink?.shotNumber
 
   // Hulls are drawn only for ships the viewer is entitled to see: your own fleet, and the
   // opponent's ships once they have been sunk. Nothing else reaches the page.
@@ -91,7 +92,12 @@ export function BattleGrid({
           {impact && sameCoordinate(impact.coordinate, coordinate) ? (
             <ImpactBurst key={impact.shotNumber} />
           ) : null}
-          {sink && sinkingCells.has(key) ? <Splash key={sink.shotNumber} /> : null}
+          {sinkShotNumber !== undefined && sinkingCells.has(key) ? (
+            <Splash
+              key={sinkShotNumber}
+              delayMs={(sinkingCells.get(key) ?? 0) * SPLASH_STAGGER_MS}
+            />
+          ) : null}
         </>
       ),
     }
@@ -172,29 +178,49 @@ function ImpactBurst() {
   )
 }
 
+/** How much later each square along the hull splashes, so the ship goes down as a ripple. */
+const SPLASH_STAGGER_MS = 45
+
 /**
  * Cold rings and a thrown drop, played once across every square of a ship as it goes down.
  * Flat and blue so that a sinking never reads as another hit.
  */
-function Splash() {
+function Splash({ delayMs }: { readonly delayMs: number }) {
   return (
     <span aria-hidden="true" className="pointer-events-none absolute inset-0 z-20">
-      <span className="animate-splash-ring absolute inset-[20%] rounded-full border-2 border-wave" />
-      <span className="animate-splash-ring-late absolute inset-[26%] rounded-full border border-foam" />
-      <span className="animate-splash-drop absolute inset-[38%] rounded-full bg-foam" />
+      <span
+        className="animate-splash-wash bg-wave absolute inset-0"
+        style={{ animationDelay: `${delayMs}ms` }}
+      />
+      <span
+        className="animate-splash-ring absolute inset-[8%] rounded-full border-2 border-foam"
+        style={{ animationDelay: `${delayMs}ms` }}
+      />
+      <span
+        className="animate-splash-ring-late absolute inset-[20%] rounded-full border-2 border-wave"
+        style={{ animationDelay: `${delayMs + 110}ms` }}
+      />
+      <span
+        className="animate-splash-drop absolute inset-[32%] rounded-full bg-foam"
+        style={{ animationDelay: `${delayMs}ms` }}
+      />
     </span>
   )
 }
 
-/** The squares of the ship a shot has just sunk, if that is what the shot did. */
+/**
+ * The squares of the ship a shot has just sunk, each with its position along the hull, so the
+ * splash can run from one end to the other.
+ */
 function sinkingShipCells(
   occupied: ReadonlyMap<CoordinateKey, ShipId>,
   sink: Impact | undefined,
-): ReadonlySet<CoordinateKey> {
-  if (!sink) return new Set()
+): ReadonlyMap<CoordinateKey, number> {
+  if (!sink) return new Map()
 
   const sunkShipId = occupied.get(coordinateKey(sink.coordinate))
-  if (!sunkShipId) return new Set()
+  if (!sunkShipId) return new Map()
 
-  return new Set([...occupied].filter(([, shipId]) => shipId === sunkShipId).map(([key]) => key))
+  const hull = [...occupied].filter(([, shipId]) => shipId === sunkShipId).map(([key]) => key)
+  return new Map(hull.map((key, index) => [key, index]))
 }
