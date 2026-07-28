@@ -92,10 +92,15 @@ with `document.documentElement.scrollWidth === clientWidth` for "nothing clipped
   const obs = new MutationObserver(() => {
     if (!document.querySelector('.animate-splash-wash')) return
     obs.disconnect()
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      window.__froze = document.getAnimations().length
-      document.getAnimations().forEach(a => { a.pause(); a.currentTime = 220 })
-    }))
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        window.__froze = document.getAnimations().length
+        document.getAnimations().forEach((a) => {
+          a.pause()
+          a.currentTime = 220
+        })
+      }),
+    )
   })
   obs.observe(document.body, { childList: true, subtree: true })
   ```
