@@ -4,8 +4,9 @@ A single-player game of Battleship played in the browser against an AI opponent.
 
 Place your fleet, then trade shots with a hunt/target AI until one fleet is gone.
 
-- **Play it:** deployed from `main` on Vercel (every pull request also gets its own preview
-  deployment, so a change can be played before it is merged).
+- **Play it:** [battleship-liya-angel.vercel.app](https://battleship-liya-angel.vercel.app) —
+  deployed from `main` on Vercel (every pull request also gets its own preview deployment, so a
+  change can be played before it is merged).
 - **Bug log:** [BUGS.md](./BUGS.md) — what broke during development, how it was reproduced, and
   what stops it coming back.
 
