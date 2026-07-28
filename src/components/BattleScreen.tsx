@@ -6,6 +6,7 @@ import { BattleGrid, type Impact } from './BattleGrid.tsx'
 import { CommandButton } from './CommandButton.tsx'
 import { EventLog } from './EventLog.tsx'
 import { FleetStatus } from './FleetStatus.tsx'
+import { GameOverBanner } from './GameOverBanner.tsx'
 import { Legend } from './Legend.tsx'
 import { Wordmark } from './Wordmark.tsx'
 
@@ -57,7 +58,7 @@ export function BattleScreen({ state, dispatch, aiDelayMs = AI_TURN_DELAY_MS }: 
   // The whole battle is meant to fit one screen: fleets and the key across the top, both boards
   // side by side with the title and the turn between them, and the log folded away below.
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-4">
       <div className="grid gap-3 border border-edge px-4 py-3 sm:grid-cols-2">
         <FleetStatus title="Opponent fleet" board={state.aiBoard} revealDamage={isOver} />
         <FleetStatus title="Your fleet" board={state.playerBoard} revealDamage={true} />
@@ -71,7 +72,7 @@ export function BattleScreen({ state, dispatch, aiDelayMs = AI_TURN_DELAY_MS }: 
         </div>
       </div>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[1fr_minmax(11rem,15rem)_1fr] lg:items-center">
+      <div className="grid items-start gap-4 lg:grid-cols-[1fr_minmax(9rem,13rem)_1fr] lg:items-center lg:gap-5">
         <BoardPanel title="Opponent waters">
           <BattleGrid
             ariaLabel="Opponent waters"
@@ -84,9 +85,9 @@ export function BattleScreen({ state, dispatch, aiDelayMs = AI_TURN_DELAY_MS }: 
           />
         </BoardPanel>
 
-        <div className="order-first flex flex-col items-center gap-4 py-2 text-center lg:order-none">
+        <div className="order-first flex flex-col items-center gap-5 py-2 text-center lg:order-none">
           <Wordmark className="w-full max-w-[13rem]" />
-          <Status state={state} onNewGame={newGame} />
+          <Turn state={state} />
         </div>
 
         <BoardPanel title="Your waters">
@@ -101,6 +102,14 @@ export function BattleScreen({ state, dispatch, aiDelayMs = AI_TURN_DELAY_MS }: 
       </div>
 
       <EventLog entries={state.log} />
+
+      {isOver ? (
+        <GameOverBanner
+          won={state.winner === 'player'}
+          shots={state.log.length}
+          onNewGame={newGame}
+        />
+      ) : null}
     </div>
   )
 }
@@ -114,29 +123,9 @@ function BoardPanel({ title, children }: { readonly title: string; readonly chil
   )
 }
 
-/** Whose turn it is, or how the game ended. */
-function Status({
-  state,
-  onNewGame,
-}: {
-  readonly state: StartedState
-  readonly onNewGame: () => void
-}) {
-  if (state.phase === 'gameOver') {
-    return (
-      <section role="status" className="flex flex-col items-center gap-2">
-        <h2 className="text-sm font-semibold text-chalk">
-          {state.winner === 'player'
-            ? 'You win — the enemy fleet is destroyed.'
-            : 'You lose — your fleet is gone.'}
-        </h2>
-        <p className="text-xs text-fog">
-          {state.log.length} shots were fired in total. The full enemy fleet is now revealed.
-        </p>
-        <CommandButton onClick={onNewGame}>Play again</CommandButton>
-      </section>
-    )
-  }
+/** Whose turn it is. How the game ended is the banner's job. */
+function Turn({ state }: { readonly state: StartedState }) {
+  if (state.phase === 'gameOver') return null
 
   // The line is held at the height of its longest wording, so the title above it never moves
   // as the turn changes.

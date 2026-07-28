@@ -60,14 +60,14 @@ export function PlacementScreen({ state, dispatch }: PlacementScreenProps) {
   }
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
       <div className="flex flex-col items-center gap-2 text-center">
-        <Wordmark className="w-full max-w-[16rem]" />
+        <Wordmark className="w-full max-w-[18rem]" />
         <p className="text-[0.65rem] tracking-[0.2em] text-fog uppercase">Position your fleet</p>
       </div>
 
-      <div className="flex flex-col items-start gap-8 lg:flex-row lg:gap-12">
-        <div className="w-full max-w-[24rem]">
+      <div className="flex flex-col items-start justify-center gap-8 lg:flex-row lg:items-center lg:gap-16">
+        <div className="w-full max-w-[36rem]">
           <p className="mb-3 min-h-9 text-sm text-fog">
             {selectedShipId
               ? `Placing the ${SHIP_NAMES.get(selectedShipId) ?? ''} — click a square on your grid.`
@@ -85,7 +85,7 @@ export function PlacementScreen({ state, dispatch }: PlacementScreenProps) {
           </Grid>
         </div>
 
-        <div className="flex w-full max-w-xs flex-col gap-5">
+        <div className="flex w-full max-w-sm flex-col gap-5">
           <fieldset>
             <legend className="mb-2 text-[0.65rem] tracking-[0.2em] text-fog uppercase">
               Orientation

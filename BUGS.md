@@ -172,3 +172,44 @@ Each entry follows the same shape:
   explicit; mixing the two makes the layout depend on DOM order in a way nobody expects. It was
   caught only by looking at the running app — the 151 unit tests all passed, because the DOM was
   perfectly correct and it was the painting that was wrong.
+
+## BUG-009 — The opponent's surviving ships are announced as "your ship" (open)
+
+- **Severity:** low (wording only, and only after the game has ended — but it is wrong for
+  exactly the users who cannot see the board)
+- **Found in:** the endgame banner work, reading the board's accessible names during a loss
+- **Symptom:** when the game ends and both fleets are revealed, every square holding an
+  opponent ship that was never fired at is announced as `H-4, your ship` — on the opponent's
+  board as well as your own.
+- **Reproduction:**
+  1. Play until the opponent wins, so the enemy fleet is revealed with ships still intact.
+  2. Read the accessible name of an intact opponent square, e.g. with
+     `getByRole('group', { name: 'Opponent waters' })`.
+  3. It reads `your ship`.
+- **Root cause:** `CELL_DESCRIPTIONS` in `BattleGrid` maps the cell state `ship` to the fixed
+  string `'your ship'`. During play only your own board can ever be in that state, so the
+  wording was safe; at game over the opponent's board is rendered with `revealShips` too, and
+  the same map is used for both. The wording assumed a fact about the caller.
+- **Fix:** not yet fixed. The cell state does not know whose water it is, so the grid needs to
+  be told — a word supplied per board (`'your ship'` / `'enemy ship'`) rather than a constant.
+  Note that `BattleScreen.test.tsx` currently _asserts_ the wrong wording
+  (`expect(opponentSquare('A-1')).toHaveAccessibleName('A-1, your ship')`), so the fix has to
+  correct that assertion as well; it is recorded here rather than changed quietly.
+- **Prevention:** the same lesson as BUG-005, one layer further out: a component that renders
+  two boards from one code path must be told which board it is drawing whenever the answer
+  changes what the user is told. A hard-coded first-person string is a hidden assumption about
+  the caller.
+
+---
+
+## Sweeps that found nothing
+
+Recording these keeps the log honest about how much of it is "we looked and it was fine".
+
+- **`db47fa5`, the endgame banner and larger boards.** A complete game to a win (35 shots) and a
+  complete game to a loss (114 shots) in a real browser, plus restart, reduced-motion and three
+  window sizes. No defects. Two things worth noting rather than filing: below the `lg`
+  breakpoint the boards stack and the page scrolls, which is the intended small-screen layout
+  and not the banner overflowing; and the glow was deliberately split into a frame class and a
+  text class, because `text-shadow` inherits and a single class would have haloed the shot count
+  and the button label.

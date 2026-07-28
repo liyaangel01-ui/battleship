@@ -9,7 +9,9 @@ export function App() {
   // above the fleet during placement, where it anchors whichever screen is showing.
   return (
     <div className="flex min-h-full flex-col bg-ink font-mono text-chalk">
-      <main className="flex-1 px-6 py-6">
+      {/* The screens are centred in whatever is left of the window, so the game sits in the
+          middle of the display rather than hanging from the top edge. */}
+      <main className="flex flex-1 items-center justify-center px-4 py-4">
         {state.phase === 'placement' ? (
           <PlacementScreen state={state} dispatch={dispatch} />
         ) : (

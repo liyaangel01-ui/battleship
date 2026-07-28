@@ -79,10 +79,11 @@ export function Grid({ ariaLabel, cell, onCellClick, onCellEnter, onLeave, child
       role="group"
       aria-label={ariaLabel}
       onMouseLeave={onLeave}
-      // The board is capped by the height of the window as well as by its width, so a whole
-      // game still fits on a short screen without scrolling.
-      className="grid w-full max-w-[min(24rem,48vh)] select-none"
-      style={{ gridTemplateColumns: `1.5rem repeat(${BOARD_SIZE}, minmax(0, 1fr))` }}
+      // The board takes as much of the window as it can while leaving room for everything
+      // around it: capped by height as well as width, so a whole game still fits a short
+      // screen without scrolling.
+      className="grid w-full max-w-[min(36rem,52vh)] select-none"
+      style={{ gridTemplateColumns: `1.75rem repeat(${BOARD_SIZE}, minmax(0, 1fr))` }}
     >
       {/* Every item is placed explicitly. The ship overlays are positioned by grid line, and a
           mix of placed and auto-placed items would push the squares out of their own rows. */}
