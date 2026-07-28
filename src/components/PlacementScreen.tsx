@@ -1,12 +1,16 @@
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 
 import { canPlace, cellsForPlacement, isFleetComplete, occupiedCells } from '../domain/board.ts'
 import { FLEET } from '../domain/constants.ts'
 import { coordinateKey, formatCoordinate, isInsideBoard } from '../domain/coordinates.ts'
-import type { Coordinate, Orientation, ShipId } from '../domain/types.ts'
+import type { Coordinate, ShipId } from '../domain/types.ts'
 import type { GameAction, PlacementState } from '../state/gameState.ts'
+import { CommandButton } from './CommandButton.tsx'
 import { FleetList } from './FleetList.tsx'
+import { FleetOverlay } from './FleetOverlay.tsx'
 import { Grid, type GridCellProps } from './Grid.tsx'
+import { ShipPeg } from './ShipSilhouette.tsx'
+import { Wordmark } from './Wordmark.tsx'
 
 interface PlacementScreenProps {
   readonly state: PlacementState
@@ -43,6 +47,7 @@ export function PlacementScreen({ state, dispatch }: PlacementScreenProps) {
       label: shipName
         ? `${formatCoordinate(coordinate)}, ${shipName} — click to remove`
         : `${formatCoordinate(coordinate)}, empty water`,
+      ...(shipId ? { content: <ShipPeg /> } : {}),
     }
   }
 
@@ -55,74 +60,84 @@ export function PlacementScreen({ state, dispatch }: PlacementScreenProps) {
   }
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col items-start gap-8 lg:flex-row lg:gap-12">
-      <div className="w-full max-w-[24rem]">
-        <h2 className="mb-1 text-lg font-semibold">Position your fleet</h2>
-        <p className="mb-4 text-sm text-ocean-300">
-          {selectedShipId
-            ? `Placing the ${SHIP_NAMES.get(selectedShipId) ?? ''} — click a square on your grid.`
-            : 'Every ship is placed. Adjust anything you like, then start the battle.'}
-        </p>
-
-        <Grid
-          ariaLabel="Your waters"
-          cell={cell}
-          onCellClick={handleClick}
-          onCellEnter={setHovered}
-          onLeave={() => setHovered(undefined)}
-        />
+    <div className="mx-auto flex max-w-5xl flex-col gap-6">
+      <div className="flex flex-col items-center gap-2 text-center">
+        <Wordmark className="w-full max-w-[16rem]" />
+        <p className="text-[0.65rem] tracking-[0.2em] text-fog uppercase">Position your fleet</p>
       </div>
 
-      <div className="flex w-full max-w-xs flex-col gap-5">
-        <fieldset>
-          <legend className="mb-2 text-xs font-semibold tracking-wide text-ocean-300 uppercase">
-            Orientation
-          </legend>
-          <div className="flex gap-2">
-            {(['horizontal', 'vertical'] as const).map((option) => (
-              <OrientationButton
-                key={option}
-                option={option}
-                current={orientation}
-                onSelect={() => dispatch({ type: 'setOrientation', orientation: option })}
-              />
-            ))}
-          </div>
-        </fieldset>
+      <div className="flex flex-col items-start gap-8 lg:flex-row lg:gap-12">
+        <div className="w-full max-w-[24rem]">
+          <p className="mb-3 min-h-9 text-sm text-fog">
+            {selectedShipId
+              ? `Placing the ${SHIP_NAMES.get(selectedShipId) ?? ''} — click a square on your grid.`
+              : 'Every ship is placed. Adjust anything you like, then start the battle.'}
+          </p>
 
-        <div>
-          <h3 className="mb-2 text-xs font-semibold tracking-wide text-ocean-300 uppercase">
-            Fleet
-          </h3>
-          <FleetList
-            board={playerBoard}
-            selectedShipId={selectedShipId}
-            onSelect={(shipId: ShipId) => dispatch({ type: 'selectShip', shipId })}
-            onRemove={(shipId: ShipId) => dispatch({ type: 'removeShip', shipId })}
-          />
+          <Grid
+            ariaLabel="Your waters"
+            cell={cell}
+            onCellClick={handleClick}
+            onCellEnter={setHovered}
+            onLeave={() => setHovered(undefined)}
+          >
+            <FleetOverlay placements={playerBoard.placements} className="z-0 text-chalk/60" />
+          </Grid>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <div className="flex gap-2">
-            <SecondaryButton onClick={() => dispatch({ type: 'randomizeFleet' })}>
-              Random fleet
-            </SecondaryButton>
-            <SecondaryButton onClick={() => dispatch({ type: 'clearFleet' })}>
-              Clear
-            </SecondaryButton>
+        <div className="flex w-full max-w-xs flex-col gap-5">
+          <fieldset>
+            <legend className="mb-2 text-[0.65rem] tracking-[0.2em] text-fog uppercase">
+              Orientation
+            </legend>
+            <div className="flex gap-2">
+              {(['horizontal', 'vertical'] as const).map((option) => (
+                <CommandButton
+                  key={option}
+                  pressed={option === orientation}
+                  onClick={() => dispatch({ type: 'setOrientation', orientation: option })}
+                  className="flex-1"
+                >
+                  {option}
+                </CommandButton>
+              ))}
+            </div>
+          </fieldset>
+
+          <div>
+            <h2 className="mb-2 text-[0.65rem] tracking-[0.2em] text-fog uppercase">Fleet</h2>
+            <FleetList
+              board={playerBoard}
+              selectedShipId={selectedShipId}
+              onSelect={(shipId: ShipId) => dispatch({ type: 'selectShip', shipId })}
+              onRemove={(shipId: ShipId) => dispatch({ type: 'removeShip', shipId })}
+            />
           </div>
 
-          <button
-            type="button"
-            disabled={!fleetComplete}
-            onClick={() => dispatch({ type: 'startGame' })}
-            className="rounded-md bg-ocean-500 px-4 py-2.5 font-semibold text-white transition-colors hover:bg-ocean-300 hover:text-ocean-900 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-ocean-300"
-          >
-            Start battle
-          </button>
-          {fleetComplete ? null : (
-            <p className="text-xs text-ocean-300">All five ships must be placed first.</p>
-          )}
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <CommandButton
+                onClick={() => dispatch({ type: 'randomizeFleet' })}
+                className="flex-1"
+              >
+                Random fleet
+              </CommandButton>
+              <CommandButton onClick={() => dispatch({ type: 'clearFleet' })} className="flex-1">
+                Clear
+              </CommandButton>
+            </div>
+
+            <CommandButton
+              disabled={!fleetComplete}
+              onClick={() => dispatch({ type: 'startGame' })}
+              className="py-3"
+            >
+              Start battle
+            </CommandButton>
+            {fleetComplete ? null : (
+              <p className="text-xs text-fog">All five ships must be placed first.</p>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -151,51 +166,9 @@ function previewFor(
 }
 
 function cellClassName(inPreview: boolean, previewIsLegal: boolean, hasShip: boolean): string {
-  if (inPreview) return previewIsLegal ? 'bg-emerald-400/80' : 'bg-rose-500/70'
-  if (hasShip) return 'bg-ocean-300 hover:bg-ocean-300/70'
-  return 'bg-ocean-700/40 hover:bg-ocean-700/80'
-}
-
-function OrientationButton({
-  option,
-  current,
-  onSelect,
-}: {
-  readonly option: Orientation
-  readonly current: Orientation
-  readonly onSelect: () => void
-}) {
-  const isSelected = option === current
-  return (
-    <button
-      type="button"
-      aria-pressed={isSelected}
-      onClick={onSelect}
-      className={`flex-1 rounded-md border px-3 py-2 text-sm capitalize transition-colors ${
-        isSelected
-          ? 'border-ocean-300 bg-ocean-700/60'
-          : 'border-white/10 bg-white/5 hover:border-ocean-300/60'
-      }`}
-    >
-      {option}
-    </button>
-  )
-}
-
-function SecondaryButton({
-  onClick,
-  children,
-}: {
-  readonly onClick: () => void
-  readonly children: ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex-1 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm transition-colors hover:border-ocean-300/60"
-    >
-      {children}
-    </button>
-  )
+  if (inPreview) return previewIsLegal ? 'z-10 bg-chalk/30' : 'z-10 bg-ember/50'
+  // A square holding a ship sits above the hull drawn over the board, so its peg is not
+  // painted over by the hull it belongs to.
+  if (hasShip) return 'z-10 hover:bg-chalk/15'
+  return 'bg-ink hover:bg-chalk/10'
 }

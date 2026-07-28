@@ -1,4 +1,4 @@
-import { useRef, type KeyboardEvent } from 'react'
+import { useRef, type KeyboardEvent, type ReactNode } from 'react'
 
 import { BOARD_SIZE } from '../domain/constants.ts'
 import {
@@ -25,6 +25,8 @@ export interface GridCellProps {
   /** Spoken by screen readers, e.g. "D-4, your carrier, hit". */
   readonly label: string
   readonly disabled?: boolean
+  /** Marks drawn inside the square — a peg, a hit marker, a targeting reticle. */
+  readonly content?: ReactNode
 }
 
 interface GridProps {
@@ -34,6 +36,8 @@ interface GridProps {
   readonly onCellClick?: (coordinate: Coordinate) => void
   readonly onCellEnter?: (coordinate: Coordinate) => void
   readonly onLeave?: () => void
+  /** Extra grid items drawn over the squares, used for the ship outlines. */
+  readonly children?: ReactNode
 }
 
 /**
@@ -46,7 +50,7 @@ interface GridProps {
  * Every square is a real `<button>`, so the whole board is reachable by keyboard and each
  * square announces its own state, rather than being a div that happens to respond to clicks.
  */
-export function Grid({ ariaLabel, cell, onCellClick, onCellEnter, onLeave }: GridProps) {
+export function Grid({ ariaLabel, cell, onCellClick, onCellEnter, onLeave, children }: GridProps) {
   const squares = useRef(new Map<CoordinateKey, HTMLButtonElement>())
 
   /**
@@ -77,12 +81,18 @@ export function Grid({ ariaLabel, cell, onCellClick, onCellEnter, onLeave }: Gri
       onMouseLeave={onLeave}
       // The board is capped by the height of the window as well as by its width, so a whole
       // game still fits on a short screen without scrolling.
-      className="grid w-full max-w-[min(24rem,48vh)] gap-px select-none"
-      style={{ gridTemplateColumns: `1.25rem repeat(${BOARD_SIZE}, minmax(0, 1fr))` }}
+      className="grid w-full max-w-[min(24rem,48vh)] select-none"
+      style={{ gridTemplateColumns: `1.5rem repeat(${BOARD_SIZE}, minmax(0, 1fr))` }}
     >
-      <span aria-hidden="true" />
-      {COLUMN_LABELS.map((label) => (
-        <span key={label} aria-hidden="true" className="pb-1 text-center text-xs text-ocean-300">
+      {/* Every item is placed explicitly. The ship overlays are positioned by grid line, and a
+          mix of placed and auto-placed items would push the squares out of their own rows. */}
+      {COLUMN_LABELS.map((label, col) => (
+        <span
+          key={label}
+          aria-hidden="true"
+          style={{ gridColumn: col + 2, gridRow: 1 }}
+          className="pb-1.5 text-center text-[0.65rem] tracking-widest text-fog"
+        >
           {label}
         </span>
       ))}
@@ -99,6 +109,8 @@ export function Grid({ ariaLabel, cell, onCellClick, onCellEnter, onLeave }: Gri
           {...(onCellEnter ? { onCellEnter } : {})}
         />
       ))}
+
+      {children}
     </div>
   )
 }
@@ -126,12 +138,21 @@ function RowCells({
     <>
       <span
         aria-hidden="true"
-        className="self-center pr-1 text-right text-xs leading-none text-ocean-300"
+        style={{ gridColumn: 1, gridRow: row + 2 }}
+        className="self-center pr-1.5 text-right text-[0.65rem] leading-none text-fog"
       >
         {rowLabel}
       </span>
       {rowCoordinates.map((coordinate) => {
         const props = cell(coordinate)
+        // Each square draws its top and left rule; the last column and row close the frame.
+        // Single-sided rules keep every line exactly one pixel wide.
+        const edges = [
+          'border-t border-l',
+          coordinate.col === BOARD_SIZE - 1 ? 'border-r' : '',
+          coordinate.row === BOARD_SIZE - 1 ? 'border-b' : '',
+        ].join(' ')
+
         return (
           <button
             key={coordinateKey(coordinate)}
@@ -146,8 +167,11 @@ function RowCells({
             onClick={() => onCellClick?.(coordinate)}
             onMouseEnter={() => onCellEnter?.(coordinate)}
             onFocus={() => onCellEnter?.(coordinate)}
-            className={`aspect-square w-full rounded-[2px] border border-ocean-700/70 transition-colors focus:outline-2 focus:outline-offset-1 focus:outline-ocean-300 ${props.className}`}
-          />
+            style={{ gridColumn: coordinate.col + 2, gridRow: coordinate.row + 2 }}
+            className={`group relative flex aspect-square w-full items-center justify-center border-line/60 transition-colors focus:z-10 focus:outline-2 focus:outline-offset-[-2px] focus:outline-chalk ${edges} ${props.className}`}
+          >
+            {props.content}
+          </button>
         )
       })}
     </>

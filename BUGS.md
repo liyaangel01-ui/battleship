@@ -153,3 +153,22 @@ Each entry follows the same shape:
   other way round — checking that the seed was still there — the test would have passed forever
   while proving nothing about persistence. A fixture that reapplies itself silently replaces the
   behaviour under test, so test setup that runs "on every page load" deserves a second look.
+
+## BUG-008 — Ship silhouettes pushed every square out of its own row
+
+- **Severity:** high (the boards were unreadable — coordinates no longer matched the squares)
+- **Found in:** the visual redesign, first time the drawn ships were rendered over a board
+- **Symptom:** row labels appeared inside the grid, squares drifted a column further right the
+  further down the board you looked, and whole rows lost their rules.
+- **Reproduction:** render `Grid` with the 111 auto-placed items it had (corner, labels, 100
+  squares) and append a child positioned with `grid-column` / `grid-row`.
+- **Root cause:** CSS grid places explicitly-positioned items first, then flows the auto-placed
+  ones around them. The ship overlays are positioned by grid line, so every square after the
+  first ship was pushed along to the next free slot. Nothing was wrong with the overlay's own
+  coordinates — the damage was to its neighbours.
+- **Fix:** every square and label now carries its own `grid-column` / `grid-row`, so no item in
+  the board is auto-placed and none can be displaced.
+- **Prevention:** the general rule is that a grid should be either fully auto-placed or fully
+  explicit; mixing the two makes the layout depend on DOM order in a way nobody expects. It was
+  caught only by looking at the running app — the 151 unit tests all passed, because the DOM was
+  perfectly correct and it was the painting that was wrong.

@@ -19,7 +19,7 @@ export function FleetStatus({ title, board, revealDamage }: FleetStatusProps) {
 
   return (
     <section>
-      <h3 className="text-xs font-semibold tracking-wide text-ocean-300 uppercase">
+      <h3 className="text-[0.65rem] tracking-[0.2em] text-fog uppercase">
         {title} — {remaining} of {statuses.length} afloat
       </h3>
       {/* The fleet reads as one line across the top of the screen rather than a tall list, so
@@ -30,17 +30,17 @@ export function FleetStatus({ title, board, revealDamage }: FleetStatusProps) {
 
           return (
             <li key={ship.id} className="flex items-center gap-1.5 text-xs">
-              <span className={isSunk ? 'text-ocean-300 line-through' : ''}>{ship.name}</span>
+              <span className={isSunk ? 'text-fog line-through' : 'text-chalk'}>{ship.name}</span>
               <span className="flex items-center gap-0.5" aria-hidden="true">
                 {Array.from({ length: ship.length }, (_, cell) => (
                   <span
                     key={cell}
-                    className={`h-2 w-2 rounded-[2px] ${
+                    className={`h-2 w-2 ${
                       cell < damageShown
                         ? isSunk
-                          ? 'bg-rose-600'
-                          : 'bg-amber-400'
-                        : 'bg-ocean-300/40'
+                          ? 'bg-ember'
+                          : 'bg-blast'
+                        : 'border border-line/70 bg-ink'
                     }`}
                   />
                 ))}

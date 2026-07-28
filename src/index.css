@@ -1,16 +1,175 @@
 @import 'tailwindcss';
 
+/**
+ * A monochrome instrument panel: black ground, white marks, grey for everything secondary.
+ * The three warm colours exist only for the moment a shot lands.
+ */
 @theme {
-  --color-ocean-50: #eff8ff;
-  --color-ocean-100: #dbeefe;
-  --color-ocean-300: #7cc4fa;
-  --color-ocean-500: #1d8fe1;
-  --color-ocean-700: #14588f;
-  --color-ocean-900: #0d3557;
+  --color-ink: #000000;
+  --color-chalk: #ffffff;
+  --color-fog: #9a9a9a;
+  --color-line: #6b6b6b;
+  --color-edge: #262626;
+
+  --color-flash: #ffd27a;
+  --color-blast: #d95f18;
+  --color-ember: #b3261e;
+
+  /* The two cold colours, used only for a ship going down. */
+  --color-wave: #3a7ca8;
+  --color-foam: #a8d4ec;
+
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 }
 
 html,
 body,
 #root {
   height: 100%;
+}
+
+/* The impact burst: a flash, then a ring thrown outwards, then nothing. The permanent hit
+   marker sits underneath and is what remains once this has finished. */
+@keyframes impact-flash {
+  0% {
+    opacity: 1;
+    transform: scale(0.2);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes impact-ring {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+/* Four blunt spikes, the printed comic-book way of drawing a hit. */
+@keyframes impact-spikes {
+  0% {
+    opacity: 1;
+    transform: scale(0.2) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.15) rotate(45deg);
+  }
+}
+
+.animate-impact-flash {
+  animation: impact-flash 420ms ease-out forwards;
+}
+
+.animate-impact-ring {
+  animation: impact-ring 450ms ease-out forwards;
+}
+
+.animate-impact-spikes {
+  clip-path: polygon(50% 0%, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0% 50%, 38% 38%);
+  animation: impact-spikes 420ms ease-out forwards;
+}
+
+/* A ship going down: two rings thrown out across the hull, and a drop thrown up from the
+   middle of each square. Cold and flat, so it never reads as another hit. */
+@keyframes splash-ring {
+  0% {
+    opacity: 1;
+    transform: scale(0.15);
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+@keyframes splash-wash {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.75;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes splash-drop {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-110%) scale(0.25);
+  }
+}
+
+.animate-splash-ring {
+  animation: splash-ring 480ms ease-out forwards;
+}
+
+.animate-splash-ring-late {
+  animation: splash-ring 480ms ease-out forwards;
+  opacity: 0;
+}
+
+.animate-splash-drop {
+  animation: splash-drop 460ms ease-out forwards;
+}
+
+.animate-splash-wash {
+  animation: splash-wash 420ms ease-out forwards;
+  opacity: 0;
+}
+
+.animate-reveal {
+  animation: reveal 180ms ease-out both;
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-impact-flash,
+  .animate-impact-ring,
+  .animate-impact-spikes,
+  .animate-splash-ring,
+  .animate-splash-ring-late,
+  .animate-splash-drop,
+  .animate-splash-wash,
+  .animate-reveal {
+    animation: none;
+  }
+
+  .animate-impact-flash,
+  .animate-impact-ring,
+  .animate-impact-spikes,
+  .animate-splash-ring,
+  .animate-splash-ring-late,
+  .animate-splash-drop,
+  .animate-splash-wash {
+    opacity: 0;
+  }
 }
