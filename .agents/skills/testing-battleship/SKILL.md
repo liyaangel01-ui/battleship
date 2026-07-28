@@ -65,7 +65,69 @@ with `document.documentElement.scrollWidth === clientWidth` for "nothing clipped
 
 - After resizing the window from the shell, Chrome may lose foreground focus and
   `browser_console` will error with "Chrome is not in the foreground" — click the page first.
-- The hit impact burst lasts ~300ms; a screenshot taken after the usual 2s wait will not show
-  it. Capture it immediately after the click or rely on the recording.
+- The hit impact burst is short (~420-450ms in newer commits, ~300ms before that); a screenshot
+  taken after the usual 2s wait will not show it. Fire with a `left_click` and take the
+  screenshot/`zoom` in the SAME `computer` call with no `wait` between them, then a second
+  screenshot ~2s later to prove it cleared. The `zoom` action on the target cell region gives by
+  far the most legible evidence.
+- Objective burst check without timing luck: count
+  `document.querySelectorAll('.animate-impact-flash, .animate-impact-ring, .animate-impact-spikes').length`
+  — 3 on a hit, 0 on a miss. Careful: these elements stay MOUNTED for as long as the newest log
+  entry is a hit (only the CSS animation ends at ~420ms), so the count proves presence/absence,
+  not duration. Duration must be judged visually or from the recording.
+- Sink animations (`.animate-splash-wash`, `.animate-splash-ring`, `.animate-splash-ring-late`,
+  `.animate-splash-drop`) are even harder to catch than the hit burst because they are short AND
+  spread over every square of the sunk ship, with a per-square `animationDelay` stagger. Techniques:
+  (a) count generically with `document.querySelectorAll('[class*="animate-splash"]').length` — do NOT
+  hardcode the class list, the number of primitives per square has already changed once (3 → 4).
+  The invariant is `primitives × ship length` (with 4 primitives: Destroyer 8, Cruiser/Submarine 12,
+  Battleship 16, Carrier 20) while `[class*="animate-impact"]` is 0. That proves both "splash covers
+  the whole hull" and "no burst on a sinking shot".
+  (b) also read each element's inline `style.animationDelay` — the set should be
+  `index × SPLASH_STAGGER_MS` (45ms today) plus a `+110ms` late ring, which proves the ripple runs
+  end to end rather than all squares firing at once.
+  (c) **Preferred way to photograph it: freeze the real animations** instead of a CSS slowdown, so the
+  captured frame reflects shipped timings:
+  ```js
+  const obs = new MutationObserver(() => {
+    if (!document.querySelector('.animate-splash-wash')) return
+    obs.disconnect()
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        window.__froze = document.getAnimations().length
+        document.getAnimations().forEach((a) => {
+          a.pause()
+          a.currentTime = 220
+        })
+      }),
+    )
+  })
+  obs.observe(document.body, { childList: true, subtree: true })
+  ```
+  Arm this BEFORE the killing click, then `zoom` on the hull, then resume with
+  `document.getAnimations().forEach(a => { try { a.play() } catch (e) {} })`.
+  Gotcha: freezing immediately in the observer callback pauses 0 animations — you must wait two
+  `requestAnimationFrame` ticks so the CSS animations have actually started. Check `window.__froze > 0`.
+  A CSS `animation-duration` override still works as a fallback but changes timing, so say so in the
+  report if you use it.
+- Probing the mid-AI-turn window (AI reply is a 700ms `setTimeout` in `BattleScreen.tsx`): install
+  a capture-phase `click` listener that pushes `[performance.now(), e.target.ariaLabel]` to a
+  global array, then fire a shot and click "New game" in one `computer` call. Reading the array
+  afterwards proves the second click really landed inside the 700ms window (e.g. 331ms apart).
+  Then start a fresh battle and assert "Battle log — 0 shots" to prove the stray AI shot was
+  cancelled.
+- Font/typography regressions are cheapest to check via computed style: read
+  `getComputedStyle(el).fontFamily` on one element per region (instruction line, helper note, legend
+  label, button, log line, status, footer, game-over banner/summary) and assert they all start with
+  the same stack (`ui-monospace, …`). A single stray `font-sans` shows up immediately because the
+  `--font-sans` variable no longer exists.
+- Reaching game over is fine to do by losing: batch parity-sweep shots and let the AI finish your
+  fleet. Both endings render the same summary block, and the loss banner reads
+  "You lose — your fleet is gone." At game over assert
+  `document.querySelector('[aria-label="Start a new game"]') === null` and that exactly one
+  "Play again" button exists.
+- To focus a board square with the keyboard without firing it, click a harmless control after the
+  grid (e.g. the "Battle log" `<summary>`) and press `shift+Tab` — disabled squares are skipped, so
+  focus lands on the last enabled opponent square (J-10). Then arrow keys + Enter.
 - Keep the browser maximised while recording, and annotate each checklist item with
   `annotate_recording` test_start/assertion pairs.
