@@ -60,7 +60,7 @@ export function PlacementScreen({ state, dispatch }: PlacementScreenProps) {
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
       <div className="flex flex-col items-center gap-2 text-center">
-        <Wordmark />
+        <Wordmark className="w-full max-w-[16rem]" />
         <p className="font-mono text-[0.65rem] tracking-[0.2em] text-fog uppercase">
           Position your fleet
         </p>
@@ -81,7 +81,7 @@ export function PlacementScreen({ state, dispatch }: PlacementScreenProps) {
             onCellEnter={setHovered}
             onLeave={() => setHovered(undefined)}
           >
-            <FleetOverlay placements={playerBoard.placements} className="z-0 text-chalk/45" />
+            <FleetOverlay placements={playerBoard.placements} className="z-0 text-chalk/60" />
           </Grid>
         </div>
 

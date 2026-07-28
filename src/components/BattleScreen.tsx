@@ -39,6 +39,10 @@ export function BattleScreen({ state, dispatch, aiDelayMs = AI_TURN_DELAY_MS }: 
     dispatch({ type: 'playerFire', coordinate })
   }
 
+  function newGame() {
+    dispatch({ type: 'newGame' })
+  }
+
   // The burst is read off the newest log entry rather than stored separately, so there is no
   // second copy of what happened and nothing to keep in step with the game.
   const lastShot = state.log.at(-1)
@@ -60,7 +64,7 @@ export function BattleScreen({ state, dispatch, aiDelayMs = AI_TURN_DELAY_MS }: 
         </div>
       </div>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[1fr_minmax(10rem,13rem)_1fr]">
+      <div className="grid items-start gap-6 lg:grid-cols-[1fr_minmax(11rem,15rem)_1fr] lg:items-center">
         <BoardPanel title="Opponent waters">
           <BattleGrid
             ariaLabel="Opponent waters"
@@ -72,9 +76,14 @@ export function BattleScreen({ state, dispatch, aiDelayMs = AI_TURN_DELAY_MS }: 
           />
         </BoardPanel>
 
-        <div className="order-first flex flex-col items-center gap-3 py-2 text-center lg:order-none lg:py-10">
-          <Wordmark />
-          <Status state={state} onNewGame={() => dispatch({ type: 'newGame' })} />
+        <div className="order-first flex flex-col items-center gap-4 py-2 text-center lg:order-none">
+          <Wordmark className="w-full max-w-[13rem]" />
+          <Status state={state} onNewGame={newGame} />
+          {!isOver && (
+            <CommandButton onClick={newGame} ariaLabel="Start a new game">
+              New game
+            </CommandButton>
+          )}
         </div>
 
         <BoardPanel title="Your waters">

@@ -92,7 +92,7 @@ export function BattleGrid({
     <Grid ariaLabel={ariaLabel} cell={cell} {...(onFire ? { onCellClick: onFire } : {})}>
       <FleetOverlay
         placements={visiblePlacements}
-        className={revealShips ? 'z-0 text-chalk/45' : 'z-0 text-ember/70'}
+        className={revealShips ? 'z-0 text-chalk/60' : 'z-0 text-ember/80'}
         reveal={!revealShips}
       />
     </Grid>
@@ -101,11 +101,22 @@ export function BattleGrid({
 
 /** The permanent mark left on a square once it has been fired at. */
 function Marker({ state }: { readonly state: CellState }) {
+  // An unfired square shows the empty peg hole of the printed board, faint enough that a
+  // miss peg beside it is never in doubt.
+  if (state === 'unknown') {
+    return (
+      <span
+        aria-hidden="true"
+        className="pointer-events-none block h-1/3 w-1/3 rounded-full border border-line/45"
+      />
+    )
+  }
+
   if (state === 'miss') {
     return (
       <span
         aria-hidden="true"
-        className="pointer-events-none block h-1/3 w-1/3 rounded-full border border-fog"
+        className="pointer-events-none block h-2/5 w-2/5 rounded-full border-2 border-chalk/80"
       />
     )
   }
@@ -141,9 +152,10 @@ function Reticle() {
 /** A flat radial burst that plays once when a shot lands, leaving the hit marker behind. */
 function ImpactBurst() {
   return (
-    <span aria-hidden="true" className="pointer-events-none absolute inset-0">
-      <span className="animate-impact-ring absolute inset-[20%] rounded-full border-2 border-ember" />
-      <span className="animate-impact-flash absolute inset-[22%] rounded-full bg-flash shadow-[0_0_0_3px_var(--color-blast)]" />
+    <span aria-hidden="true" className="pointer-events-none absolute inset-0 z-20">
+      <span className="animate-impact-ring absolute inset-[15%] rounded-full border-2 border-ember" />
+      <span className="animate-impact-spikes absolute inset-[-10%] bg-blast" />
+      <span className="animate-impact-flash absolute inset-[18%] rounded-full bg-flash shadow-[0_0_0_4px_var(--color-blast)]" />
     </span>
   )
 }

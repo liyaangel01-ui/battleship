@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 const KEYS: readonly { readonly label: string; readonly swatch: ReactNode }[] = [
   {
     label: 'Ship',
-    swatch: <span className="h-2.5 w-4 bg-chalk/45" />,
+    swatch: <span className="h-2.5 w-4 rounded-full bg-chalk/45" />,
   },
   {
     label: 'Hit',
@@ -16,11 +16,11 @@ const KEYS: readonly { readonly label: string; readonly swatch: ReactNode }[] = 
   },
   {
     label: 'Miss',
-    swatch: <span className="h-2.5 w-2.5 rounded-full border border-fog" />,
+    swatch: <span className="h-2.5 w-2.5 rounded-full border-2 border-chalk/80" />,
   },
   {
     label: 'Not fired at',
-    swatch: <span className="h-3 w-3 border border-line/60 bg-ink" />,
+    swatch: <span className="h-2.5 w-2.5 rounded-full border border-line/45 bg-ink" />,
   },
 ]
 

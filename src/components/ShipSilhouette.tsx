@@ -6,46 +6,21 @@ const CELL = 100
 
 const SHIP_LENGTHS = new Map(FLEET.map((ship) => [ship.id, ship.length]))
 
-/** A hull with a pointed bow on the right and a squared-off stern on the left. */
+/**
+ * The hull of the printed manual: a long oval, drawn bow-right, tapering to a point at each
+ * end. Ships are told apart the way they are on a real board — by how many squares long they
+ * are — rather than by superstructure that vanishes at this size.
+ */
 function hull(length: number): string {
   const bow = length * CELL
-  return `M 8 50 L 24 22 H ${bow - 30} L ${bow - 8} 50 L ${bow - 30} 78 H 24 Z`
-}
-
-/** A rounded hull, used for the submarine so it reads differently from the surface ships. */
-function submarineHull(length: number): string {
-  const bow = length * CELL
-  return `M 10 50 Q 10 26 40 26 H ${bow - 34} Q ${bow - 8} 50 ${bow - 34} 74 H 40 Q 10 74 10 50 Z`
-}
-
-interface Detail {
-  readonly x: number
-  readonly y: number
-  readonly width: number
-  readonly height: number
-  readonly radius?: number
-}
-
-/**
- * The few marks that tell one ship from another at this size: a deck island, turrets, a
- * conning tower. Anything more disappears in a square 30 pixels wide.
- */
-const DETAILS: Record<ShipId, (length: number) => readonly Detail[]> = {
-  carrier: (length) => [
-    { x: 40, y: 44, width: length * CELL - 90, height: 12, radius: 2 },
-    { x: length * CELL - 150, y: 12, width: 30, height: 30, radius: 3 },
-  ],
-  battleship: (length) => [
-    { x: 60, y: 38, width: 44, height: 24, radius: 4 },
-    { x: length * CELL - 150, y: 38, width: 44, height: 24, radius: 4 },
-    { x: (length * CELL) / 2 - 8, y: 10, width: 16, height: 34, radius: 2 },
-  ],
-  cruiser: (length) => [
-    { x: 56, y: 38, width: 40, height: 24, radius: 4 },
-    { x: length * CELL - 130, y: 14, width: 16, height: 30, radius: 2 },
-  ],
-  submarine: (length) => [{ x: (length * CELL) / 2 - 14, y: 14, width: 28, height: 26, radius: 3 }],
-  destroyer: (length) => [{ x: (length * CELL) / 2 - 16, y: 16, width: 32, height: 28, radius: 3 }],
+  return [
+    `M 12 50`,
+    `C 12 26 ${CELL * 0.5} 12 ${bow / 2} 12`,
+    `C ${bow - CELL * 0.5} 12 ${bow - 12} 26 ${bow - 12} 50`,
+    `C ${bow - 12} 74 ${bow - CELL * 0.5} 88 ${bow / 2} 88`,
+    `C ${CELL * 0.5} 88 12 74 12 50`,
+    `Z`,
+  ].join(' ')
 }
 
 interface ShipSilhouetteProps {
@@ -64,7 +39,6 @@ export function ShipSilhouette({ shipId, orientation, className }: ShipSilhouett
   const length = SHIP_LENGTHS.get(shipId) ?? 1
   const long = length * CELL
   const vertical = orientation === 'vertical'
-  const path = shipId === 'submarine' ? submarineHull(length) : hull(length)
 
   return (
     <svg
@@ -75,17 +49,15 @@ export function ShipSilhouette({ shipId, orientation, className }: ShipSilhouett
     >
       {/* Drawn once, bow to the right, then given a quarter turn for a vertical ship. */}
       <g fill="currentColor" transform={vertical ? `translate(${CELL} 0) rotate(90)` : undefined}>
-        <path d={path} />
-        {DETAILS[shipId](length).map((detail) => (
-          <rect
-            key={`${detail.x}-${detail.y}`}
-            x={detail.x}
-            y={detail.y}
-            width={detail.width}
-            height={detail.height}
-            rx={detail.radius ?? 0}
-            fill="#000000"
-            fillOpacity={0.55}
+        <path d={hull(length)} />
+        {/* One peg hole per square, so a ship reads as the squares it occupies. */}
+        {Array.from({ length }, (_, square) => (
+          <circle
+            key={square}
+            cx={square * CELL + CELL / 2}
+            cy={50}
+            r={14}
+            fill="var(--color-ink)"
           />
         ))}
       </g>

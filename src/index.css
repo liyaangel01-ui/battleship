@@ -49,16 +49,33 @@ body,
   }
   100% {
     opacity: 0;
-    transform: scale(1.9);
+    transform: scale(2.6);
+  }
+}
+
+/* Four blunt spikes, the printed comic-book way of drawing a hit. */
+@keyframes impact-spikes {
+  0% {
+    opacity: 1;
+    transform: scale(0.2) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.15) rotate(45deg);
   }
 }
 
 .animate-impact-flash {
-  animation: impact-flash 300ms ease-out forwards;
+  animation: impact-flash 420ms ease-out forwards;
 }
 
 .animate-impact-ring {
-  animation: impact-ring 320ms ease-out forwards;
+  animation: impact-ring 450ms ease-out forwards;
+}
+
+.animate-impact-spikes {
+  clip-path: polygon(50% 0%, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0% 50%, 38% 38%);
+  animation: impact-spikes 420ms ease-out forwards;
 }
 
 .animate-reveal {
@@ -77,12 +94,14 @@ body,
 @media (prefers-reduced-motion: reduce) {
   .animate-impact-flash,
   .animate-impact-ring,
+  .animate-impact-spikes,
   .animate-reveal {
     animation: none;
   }
 
   .animate-impact-flash,
-  .animate-impact-ring {
+  .animate-impact-ring,
+  .animate-impact-spikes {
     opacity: 0;
   }
 }
